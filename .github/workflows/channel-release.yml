@@ -81,6 +81,20 @@ jobs:
             cat bunfig.toml
           fi
       - run: bun install --frozen-lockfile
+      - name: Verify dependencies installed
+        run: |
+          echo "Checking @google/generative-ai installation:"
+          if [ -f node_modules/@google/generative-ai/package.json ]; then
+            echo "✓ Package found"
+            echo "Types location:"
+            cat node_modules/@google/generative-ai/package.json | jq -r '.typings'
+            ls -la node_modules/@google/generative-ai/dist/*.d.ts
+          else
+            echo "ERROR: @google/generative-ai not installed"
+            echo "Attempting to reinstall dependencies..."
+            rm -rf node_modules
+            bun install --frozen-lockfile
+          fi
       - name: Code quality (safe fixes)
         run: bun run quality-check:ci
       - name: Build
