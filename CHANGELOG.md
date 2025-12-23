@@ -1,5 +1,11 @@
 # chatline
 
+## 0.0.2-next.1
+
+### Patch Changes
+
+- [#81](https://github.com/nathanvale/chatline/pull/81) [`9d2b055`](https://github.com/nathanvale/chatline/commit/9d2b055407428465f43e5328e9597c5fb32f07cf) Thanks [@nathanvale](https://github.com/nathanvale)! - Test prerelease workflow with GitHub release creation.
+
 ## 0.0.2-next.0
 
 ### Patch Changes
