@@ -445,7 +445,11 @@ We use GitHub App tokens instead of `GITHUB_TOKEN` to trigger workflows on bot P
 - **App ID**: 2399601 (stored in 1Password `API Credentials/chatline-changesets-bot`)
 - **Private Key**: Stored in 1Password (PEM format in credential field)
 - **Permissions**: Contents (RW), Pull requests (RW), Workflows (RW)
-- **Installed on**: nathanvale/chatline
+- **Installed on**: nathanvale/chatline (**MUST be installed!**)
+- **App Settings**: https://github.com/settings/apps/chatline-changesets-bot
+
+> ⚠️ **Installation Required**: The GitHub App must be installed on the repository. If workflows fail with a 404 error on "Generate GitHub App token", verify installation at:
+> https://github.com/settings/apps/chatline-changesets-bot → Install App → Select repository
 
 **CI/CD Access**:
 - **Method**: 1Password Service Account (`GitHub Actions - chatline`)
@@ -612,7 +616,18 @@ permissions:
 1. Verify `OP_SERVICE_ACCOUNT_TOKEN` is set in GitHub Secrets
 2. Check workflow logs for "Load secrets from 1Password" and "Generate GitHub App token" steps
 3. Verify GitHub App has Workflows permission
-4. See [GitHub App Authentication → Troubleshooting](#troubleshooting)
+4. **Verify GitHub App is installed on the repository** (common miss!)
+5. See [GitHub App Authentication → Troubleshooting](#troubleshooting)
+
+**If "Generate GitHub App token" fails with 404**:
+```
+Failed to create token for "chatline": Not Found
+GET https://api.github.com/repos/nathanvale/chatline/installation → 404
+```
+The GitHub App is not installed on the repository. Fix:
+1. Go to: https://github.com/settings/apps/chatline-changesets-bot
+2. Click "Install App" → Select `nathanvale/chatline`
+3. Re-run workflow: `gh workflow run "Changesets Manage & Publish" --ref main`
 
 **Emergency fallback**:
 - **Manually merge**: `gh pr review <PR#> --approve && gh pr merge <PR#> --squash`

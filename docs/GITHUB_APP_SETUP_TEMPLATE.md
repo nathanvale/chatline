@@ -36,7 +36,13 @@ Step-by-step guide for setting up GitHub App authentication in any repository to
 - [ ] Click "Create GitHub App"
 - [ ] **Note the App ID** (e.g., 2399601)
 - [ ] Click "Generate a private key" → Downloads `.pem` file
-- [ ] Click "Install App" → Select your repository
+- [ ] Click "Install App" → Select your repository → **CRITICAL: App must be installed!**
+
+> ⚠️ **Common Failure**: If you skip installing the app, workflows will fail with:
+> ```
+> Failed to create token for "repo-name": Not Found
+> GET https://api.github.com/repos/{owner}/{repo}/installation → 404
+> ```
 
 **Output**:
 - App ID: `_______`
@@ -242,6 +248,26 @@ git push
 **Issue**: `op` command fails with authorization prompt error
 
 **Solution**: Approve the 1Password authorization prompt in your 1Password app, then retry the command
+
+### "Not Found (HTTP 404)" - App Token Generation Failed
+
+**Issue**: `actions/create-github-app-token` fails with 404 error:
+```
+Failed to create token for "repo-name": Not Found
+GET https://api.github.com/repos/{owner}/{repo}/installation → 404
+```
+
+**Cause**: GitHub App is not installed on the repository
+
+**Solution**:
+1. Go to: https://github.com/settings/apps/{repo-name}-changesets-bot
+2. Click "Install App" in the left sidebar
+3. Select your account and choose the repository
+4. Click "Install"
+5. Re-run the failed workflow:
+   ```bash
+   gh workflow run "Changesets Manage & Publish" --ref main
+   ```
 
 ### "Not Found (HTTP 404)" from GitHub API
 
