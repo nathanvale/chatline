@@ -70,12 +70,17 @@ jobs:
             echo "::notice::No NPM_TOKEN; relying on OIDC trusted publishing."
             echo "::notice::Ensure trusted publisher is configured at: npmjs.com → package Settings → Trusted Publisher"
           fi
-      - name: Remove conflicting bunfig.toml
+      - name: Fix conflicting registry in bunfig.toml
         if: ${{ inputs.intent == 'publish' || inputs.intent == 'snapshot' }}
         run: |
           # Setup Bun creates bunfig.toml with registry, which conflicts with Setup Node's registry.
-          # Remove it before bun install to avoid "Cannot redefine key 'registry'" error.
-          rm -f bunfig.toml
+          # Remove the registry line instead of deleting the file to preserve other bun settings.
+          if [ -f bunfig.toml ]; then
+            grep -v '^registry' bunfig.toml > bunfig.toml.tmp || true
+            mv bunfig.toml.tmp bunfig.toml
+            echo "Fixed bunfig.toml:"
+            cat bunfig.toml
+          fi
       - run: bun install --frozen-lockfile
       - name: Code quality (safe fixes)
         run: bun run quality-check:ci
