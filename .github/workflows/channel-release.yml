@@ -83,8 +83,11 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Clean Bun linker artifacts
         run: |
-          # Bun 1.3.x hoisted linker creates @@@1 suffix folders in project root
+          # Bun 1.3.x hoisted linker leaks packages to project root
+          # Delete @@@* suffixed folders, scoped packages (@*), and versioned packages
           find . -maxdepth 1 -type d -name '*@@@*' -exec rm -rf {} + 2>/dev/null || true
+          find . -maxdepth 1 -type d -name '@*' ! -name '.@*' -exec rm -rf {} + 2>/dev/null || true
+          find . -maxdepth 1 -type d -regex '.*/[a-z].*@[0-9].*' -exec rm -rf {} + 2>/dev/null || true
           rm -rf node_modules/.bun node_modules/.old_modules* 2>/dev/null || true
       - name: Code quality (safe fixes)
         run: bun run quality-check:ci
