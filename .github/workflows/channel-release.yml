@@ -88,11 +88,10 @@ jobs:
           if [ -f node_modules/@google/generative-ai/dist/generative-ai.d.ts ]; then
             echo "✓ Package and types found"
           else
-            echo "⚠ Types missing - clearing cache and reinstalling..."
-            # Clear bun cache to fix corrupted installs
-            bun pm cache rm 2>/dev/null || true
-            rm -rf node_modules ~/.bun/install/cache
-            bun install --frozen-lockfile
+            echo "⚠ Types missing - reinstalling without cache..."
+            # Don't clear cache (causes issues), just reinstall fresh
+            rm -rf node_modules
+            bun install --frozen-lockfile --no-cache
             # Verify fix worked
             if [ -f node_modules/@google/generative-ai/dist/generative-ai.d.ts ]; then
               echo "✓ Fixed - types now available"
