@@ -466,10 +466,10 @@ We use GitHub App tokens instead of `GITHUB_TOKEN` to trigger workflows on bot P
 
 - name: Generate GitHub App token
   id: app-token
-  uses: tibdex/github-app-token@v2.2.0
+  uses: actions/create-github-app-token@v2
   with:
-    app_id: ${{ env.GITHUB_APP_ID }}
-    private_key: ${{ env.GITHUB_APP_PRIVATE_KEY }}
+    app-id: ${{ env.GITHUB_APP_ID }}
+    private-key: ${{ env.GITHUB_APP_PRIVATE_KEY }}
 
 # Then use the token in place of secrets.GITHUB_TOKEN:
 env:

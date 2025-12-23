@@ -146,10 +146,10 @@ grep -r "GITHUB_TOKEN" .github/workflows/
 
       - name: Generate GitHub App token
         id: app-token
-        uses: tibdex/github-app-token@5d52bfa8d8a42cf09fcbdf4464759bda4d5f5f5c # v2.2.0
+        uses: actions/create-github-app-token@v2
         with:
-          app_id: ${{ env.GITHUB_APP_ID }}
-          private_key: ${{ env.GITHUB_APP_PRIVATE_KEY }}
+          app-id: ${{ env.GITHUB_APP_ID }}
+          private-key: ${{ env.GITHUB_APP_PRIVATE_KEY }}
 ```
 
 **Then replace all `GITHUB_TOKEN` references**:
@@ -399,10 +399,10 @@ jobs:
 
       - name: Generate GitHub App token
         id: app-token
-        uses: tibdex/github-app-token@v2.2.0
+        uses: actions/create-github-app-token@v2
         with:
-          app_id: ${{ env.GITHUB_APP_ID }}
-          private_key: ${{ env.GITHUB_APP_PRIVATE_KEY }}
+          app-id: ${{ env.GITHUB_APP_ID }}
+          private-key: ${{ env.GITHUB_APP_PRIVATE_KEY }}
 
       - uses: changesets/action@v1
         env:
@@ -452,6 +452,6 @@ Setup is complete when:
 
 - [GitHub Apps Documentation](https://docs.github.com/en/apps)
 - [1Password Service Accounts](https://developer.1password.com/docs/service-accounts/)
-- [tibdex/github-app-token Action](https://github.com/tibdex/github-app-token)
+- [actions/create-github-app-token Action](https://github.com/actions/create-github-app-token)
 - [1password/load-secrets-action](https://github.com/1password/load-secrets-action)
 - [Changesets Bot PR Issue](https://github.com/changesets/changesets/issues/automate)
