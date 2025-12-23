@@ -1,8 +1,8 @@
 {
-	"mode": "exit",
+	"mode": "pre",
 	"tag": "next",
 	"initialVersions": {
-		"@nathanvale/chatline": "0.0.1",
+		"@nathanvale/chatline": "0.0.2-next.0",
 		"website": "0.0.0"
 	},
 	"changesets": ["canary-test"]
