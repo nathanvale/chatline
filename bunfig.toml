@@ -1,2 +1,5 @@
 [install]
 registry = "https://registry.npmjs.org/"
+# Use hoisted linker to fix Bun 1.3.x isolated installs bug
+# See: https://github.com/oven-sh/bun/issues/23615
+linker = "hoisted"
