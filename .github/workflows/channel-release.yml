@@ -91,6 +91,7 @@ jobs:
         if: ${{ inputs.intent == 'version' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HUSKY: '0'
         run: |
           bun run version:pre
           git add .
