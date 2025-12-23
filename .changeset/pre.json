@@ -1,8 +1,9 @@
 {
-	"changesets": [],
-	"initialVersions": {
-		"imessage-timeline": "0.0.1"
-	},
-	"mode": "exit",
-	"tag": "next"
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "@nathanvale/chatline": "0.0.1",
+    "website": "0.0.0"
+  },
+  "changesets": []
 }
