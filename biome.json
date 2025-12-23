@@ -79,11 +79,13 @@
 	"files": {
 		"includes": [
 			"**",
-			"!**/node_modules",
+			"!!**/node_modules",
 			"!**/dist",
 			"!**/coverage",
 			"!**/.claude",
-			"!**/website"
+			"!**/website",
+			"!!**/*@*@@@*",
+			"!**/PROJECT_INDEX.json"
 		]
 	}
 }
