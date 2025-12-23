@@ -94,9 +94,24 @@ jobs:
           HUSKY: '0'
         run: |
           bun run version:pre
+          # Check if there are changes to commit
+          if git diff --staged --quiet && git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          # Create PR since main is protected
+          BRANCH="release/${{ inputs.channel }}-$(date +%Y%m%d%H%M%S)"
+          git checkout -b "$BRANCH"
           git add .
-          git commit -m "chore(prerelease): version bump on ${{ inputs.channel }} channel" || echo 'No changes to commit'
-          git push --follow-tags || echo 'Nothing new to push'
+          git commit -m "chore(prerelease): version bump on ${{ inputs.channel }} channel"
+          git push origin "$BRANCH"
+          # Create PR with auto-merge
+          PR_URL=$(gh pr create \
+            --title "chore(prerelease): version bump on ${{ inputs.channel }} channel" \
+            --body "Automated prerelease version bump for the ${{ inputs.channel }} channel." \
+            --base main)
+          echo "Created PR: $PR_URL"
+          gh pr merge "$PR_URL" --auto --squash
       - name: Publish prerelease
         if: ${{ inputs.intent == 'publish' }}
         env:
