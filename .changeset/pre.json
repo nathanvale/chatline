@@ -5,5 +5,10 @@
 		"@nathanvale/chatline": "0.0.2-next.1",
 		"website": "0.0.0"
 	},
-	"changesets": []
+	"changesets": [
+		"canary-test",
+		"test-auto-publish",
+		"test-next-channel",
+		"test-prerelease"
+	]
 }
