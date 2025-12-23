@@ -71,7 +71,6 @@ jobs:
             echo "::notice::Ensure trusted publisher is configured at: npmjs.com → package Settings → Trusted Publisher"
           fi
       - name: Fix conflicting registry in bunfig.toml
-        if: ${{ inputs.intent == 'publish' || inputs.intent == 'snapshot' }}
         run: |
           # Setup Bun creates bunfig.toml with registry, which conflicts with Setup Node's registry.
           # Remove the registry line instead of deleting the file to preserve other bun settings.
