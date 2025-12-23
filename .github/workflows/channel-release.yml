@@ -81,26 +81,6 @@ jobs:
             cat bunfig.toml
           fi
       - run: bun install --frozen-lockfile
-      - name: Verify dependencies installed
-        run: |
-          echo "Checking @google/generative-ai installation:"
-          # Check for both package.json AND the actual type definition file
-          if [ -f node_modules/@google/generative-ai/dist/generative-ai.d.ts ]; then
-            echo "✓ Package and types found"
-          else
-            echo "⚠ Types missing - reinstalling without cache..."
-            # Don't clear cache (causes issues), just reinstall fresh
-            rm -rf node_modules
-            bun install --frozen-lockfile --no-cache
-            # Verify fix worked
-            if [ -f node_modules/@google/generative-ai/dist/generative-ai.d.ts ]; then
-              echo "✓ Fixed - types now available"
-            else
-              echo "ERROR: Still missing types after reinstall"
-              ls -la node_modules/@google/generative-ai/ || echo "Package directory missing"
-              exit 1
-            fi
-          fi
       - name: Code quality (safe fixes)
         run: bun run quality-check:ci
       - name: Build
