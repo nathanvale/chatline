@@ -23,7 +23,7 @@ fi
 
 # Normalize Changesets pre.json formatting so CI quality check passes
 if [[ -f ".changeset/pre.json" ]]; then
-  bunx biome format .changeset/pre.json || true
+  bunx biome format --write .changeset/pre.json || true
 fi
 
 git add .
