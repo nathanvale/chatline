@@ -138,6 +138,9 @@ jobs:
 
       - name: Create GitHub Release (Prerelease)
         if: ${{ inputs.intent == 'publish' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HUSKY: '0'
         run: |
           VERSION=$(node -p "require('./package.json').version")
           TAG="v${VERSION}"
@@ -151,8 +154,6 @@ jobs:
             --title "${TAG}" \
             --notes "Prerelease version published to npm with tag: ${{ inputs.channel }}" \
             --prerelease
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Canary snapshot publish
         if: ${{ inputs.intent == 'snapshot' }}
         env:
