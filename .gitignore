@@ -5,6 +5,10 @@ coverage/
 
 # Dependencies
 node_modules/
+# Bun linker artifacts (hoisted mode creates these in project root)
+# See: https://github.com/oven-sh/bun/issues/23615
+*@@@*/
+.bun/
 
 # TypeScript
 *.tsbuildinfo
