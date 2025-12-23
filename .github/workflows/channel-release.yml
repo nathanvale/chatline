@@ -84,16 +84,23 @@ jobs:
       - name: Verify dependencies installed
         run: |
           echo "Checking @google/generative-ai installation:"
-          if [ -f node_modules/@google/generative-ai/package.json ]; then
-            echo "✓ Package found"
-            echo "Types location:"
-            cat node_modules/@google/generative-ai/package.json | jq -r '.typings'
-            ls -la node_modules/@google/generative-ai/dist/*.d.ts
+          # Check for both package.json AND the actual type definition file
+          if [ -f node_modules/@google/generative-ai/dist/generative-ai.d.ts ]; then
+            echo "✓ Package and types found"
           else
-            echo "ERROR: @google/generative-ai not installed"
-            echo "Attempting to reinstall dependencies..."
-            rm -rf node_modules
+            echo "⚠ Types missing - clearing cache and reinstalling..."
+            # Clear bun cache to fix corrupted installs
+            bun pm cache rm 2>/dev/null || true
+            rm -rf node_modules ~/.bun/install/cache
             bun install --frozen-lockfile
+            # Verify fix worked
+            if [ -f node_modules/@google/generative-ai/dist/generative-ai.d.ts ]; then
+              echo "✓ Fixed - types now available"
+            else
+              echo "ERROR: Still missing types after reinstall"
+              ls -la node_modules/@google/generative-ai/ || echo "Package directory missing"
+              exit 1
+            fi
           fi
       - name: Code quality (safe fixes)
         run: bun run quality-check:ci
