@@ -89,6 +89,8 @@ jobs:
           echo "Pre-mode active, proceeding with ${{ inputs.intent }}"
       - name: Version (prerelease continuation)
         if: ${{ inputs.intent == 'version' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           bun run version:pre
           git add .
