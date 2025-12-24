@@ -1,8 +1,21 @@
 # Release Workflow Testing Guide (ADHD-friendly)
 
-> **Quick nav**: [Auto-Publish](#test-1-auto-publish-workflow) | [Channel Release](#test-2-channel-release-workflow) | [Stable Release](#test-3-stable-release-workflow) | [Pre-mode Toggle](#test-4-pre-mode-toggle) | [Verification](#verification-checklist)
+> **Quick nav**: [Auto-Publish](#test-1-auto-publish-push-to-main) | [Pre-release Version](#test-2-pre-release-version-bump) | [Pre-release Publish](#test-3-pre-release-publish) | [Snapshot](#test-4-canary-snapshot) | [Pre-mode Toggle](#test-5-pre-mode-toggle) | [Verification](#verification-checklist)
 
 Visual structure. Step-by-step. No surprises.
+
+---
+
+## Workflow Overview
+
+**Single unified workflow**: `publish.yml`
+
+| Intent | Trigger | What it does |
+|--------|---------|--------------|
+| `auto` | Push to main | Changesets action (opens Version PR or publishes stable) |
+| `version` | Manual | Creates pre-release version bump PR |
+| `publish` | Manual | Publishes pre-release to npm with channel tag |
+| `snapshot` | Manual | Publishes canary snapshot (no pre-mode required) |
 
 ---
 
@@ -13,12 +26,12 @@ Visual structure. Step-by-step. No surprises.
 1. **Verify OIDC is configured**:
    - Go to: [npmjs.com/package/@nathanvale/chatline/access](https://www.npmjs.com/package/@nathanvale/chatline/access)
    - Settings → Trusted Publisher section
-   - Should see: `nathanvale/chatline` with `channel-release.yml` workflow
+   - Should see: `nathanvale/chatline` with **`publish.yml`** workflow
 
 2. **Check Node 24 is available in CI**:
    ```bash
    # Workflows use Node 24 for npm 11.6+ (OIDC support)
-   # This is already configured in workflows
+   # This is already configured in publish.yml
    ```
 
 3. **Verify GitHub Actions permissions**:
@@ -46,7 +59,7 @@ Visual structure. Step-by-step. No surprises.
 
 ---
 
-## Test 1: Auto-Publish Workflow (changesets-manage-publish.yml)
+## Test 1: Auto-Publish (Push to Main)
 
 **What you're testing**: Automatic "Version Packages" PR creation + auto-publish on merge
 
@@ -62,7 +75,7 @@ git checkout -b test/auto-publish-workflow
 git push -u origin test/auto-publish-workflow
 
 # Add a changeset
-bunx changeset
+bun version:gen
 
 # Example changeset:
 # - Package: @nathanvale/chatline
@@ -85,7 +98,7 @@ git push
 # Create PR via GitHub CLI
 gh pr create \
   --title "test: auto-publish workflow" \
-  --body "Testing changesets auto-publish workflow. This PR will trigger the bot to create a 'Version Packages' PR."
+  --body "Testing publish workflow auto path. This PR will trigger the bot to create a 'Version Packages' PR."
 
 # Wait for PR checks to pass
 gh pr checks
@@ -103,16 +116,16 @@ gh pr merge --squash --auto
 
 ### Step 3: Wait for "Version Packages" PR
 
-**What happens**: `changesets-manage-publish.yml` workflow runs on main push
+**What happens**: `publish.yml` workflow runs on main push with `intent=auto`
 
 **Timeline**: ~2-3 minutes
 
 **Where to watch**:
-- Actions → "Changesets Manage & Publish"
-- Pull Requests → Look for "Version Packages" PR from `github-actions[bot]`
+- Actions → "Publish"
+- Pull Requests → Look for "Version Packages" PR from `chatline-changesets-bot`
 
 **Expected PR contents**:
-- Title: "Version Packages"
+- Title: "chore: version packages"
 - Changes:
   - `package.json` version bumped (e.g., `0.0.1` → `0.0.2`)
   - `.changeset/` files removed
@@ -126,7 +139,7 @@ gh pr merge --squash --auto
 
 ---
 
-### Step 4: Review and Merge "Version Packages" PR
+### Step 4: Merge "Version Packages" PR
 
 ```bash
 # Check out the Version Packages PR locally (optional)
@@ -135,14 +148,14 @@ gh pr checkout <PR-number>
 # Review changes
 git log -1 --stat
 
-# Switch back to main and merge
-gh pr merge <PR-number> --squash --auto
+# Merge (or let auto-merge handle it)
+gh pr merge <PR-number> --squash
 ```
 
 **What happens on merge**: Workflow detects version commit and publishes to npm
 
 **✅ Verify**:
-- Workflow runs: Actions → "Changesets Manage & Publish"
+- Workflow runs: Actions → "Publish"
 - Workflow step "Changesets - open PR or publish" shows publish logs
 - Check workflow logs for:
   ```
@@ -186,7 +199,7 @@ npm view @nathanvale/chatline dist-tags
 **✅ Verify**:
 - Provenance attestation exists
 - Source: `github.com/nathanvale/chatline`
-- Workflow: `changesets-manage-publish.yml`
+- Workflow: `publish.yml`
 - Commit SHA matches your merge commit
 
 ---
@@ -201,27 +214,27 @@ git push origin --delete test/auto-publish-workflow
 
 ---
 
-## Test 2: Channel Release Workflow (channel-release.yml)
+## Test 2: Pre-release Version Bump
 
-**What you're testing**: Manual prerelease channel publish (next/beta/rc) + canary snapshots
+**What you're testing**: Manual pre-release version bump via `intent=version`
 
-**Duration**: ~15 minutes
+**Duration**: ~5 minutes
 
-**Safety**: Uses channel tags (not `latest`), safe for testing
+**Safety**: Only creates a PR, doesn't publish
 
-### Test 2A: Prerelease Channel (next)
-
-#### Step 1: Enter Pre-Mode
+### Step 1: Enter Pre-Mode
 
 ```bash
-# Checkout test branch
-git checkout -b test/channel-release-next
-git push -u origin test/channel-release-next
+# Use workflow or locally
+gh workflow run pre-mode.yml -f action=enter -f channel=next
 
-# Enter pre-mode
-bunx changeset pre enter next
+# Wait for workflow to complete
+gh run list --workflow=pre-mode.yml --limit=1
 
-# ✅ Verify: .changeset/pre.json created with:
+# Pull changes
+git pull
+
+# ✅ Verify: .changeset/pre.json created
 cat .changeset/pre.json
 # Expected:
 # {
@@ -230,22 +243,17 @@ cat .changeset/pre.json
 #   "initialVersions": { "@nathanvale/chatline": "0.0.2" },
 #   "changesets": []
 # }
-
-# Commit and push
-git add .changeset/pre.json
-git commit -m "chore: enter next pre-mode"
-git push
 ```
 
 **✅ Verify**: `.changeset/pre.json` exists and has `"tag": "next"`
 
 ---
 
-#### Step 2: Add Changeset for Prerelease
+### Step 2: Add Changeset for Prerelease
 
 ```bash
 # Add changeset
-bunx changeset
+bun version:gen
 
 # Example:
 # - Package: @nathanvale/chatline
@@ -262,44 +270,77 @@ git push
 
 ---
 
-#### Step 3: Run Version Workflow
+### Step 3: Run Version Workflow
 
-**Via GitHub Actions UI**:
-1. Go to: Actions → "Channel Release (manual)"
-2. Click "Run workflow"
-3. Select branch: `test/channel-release-next`
-4. Channel: `next`
-5. Intent: `version`
-6. Run workflow
+```bash
+# Via CLI
+gh workflow run publish.yml -f intent=version -f channel=next
 
-**What happens**: Workflow runs `changeset version`, commits bump
+# Or via GitHub Actions UI:
+# 1. Go to: Actions → "Publish"
+# 2. Click "Run workflow"
+# 3. Intent: version
+# 4. Channel: next
+# 5. Run workflow
+```
+
+**What happens**: Workflow runs `bun run version:pre`, creates PR with auto-merge
 
 **✅ Verify** (in workflow logs):
 - Workflow completes successfully
-- Check commit history:
+- PR created: `chore(prerelease): version bump on next channel`
+- Check version bump in PR:
   ```bash
-  git pull
-  git log -1 --oneline
-  # Expected: "chore(prerelease): version bump on next channel"
+  gh pr list --search="prerelease"
   ```
-- Check version bump:
-  ```bash
-  cat package.json | grep version
-  # Expected: "version": "0.1.0-next.0"
-  ```
-- Check CHANGELOG.md has prerelease entry
 
 ---
 
-#### Step 4: Run Publish Workflow
+### Step 4: Merge Version PR
 
-**Via GitHub Actions UI**:
-1. Go to: Actions → "Channel Release (manual)"
-2. Click "Run workflow"
-3. Select branch: `test/channel-release-next`
-4. Channel: `next`
-5. Intent: `publish`
-6. Run workflow
+```bash
+# PR should auto-merge after checks pass
+# Or merge manually:
+gh pr merge <PR-number> --squash
+
+# Pull changes
+git pull
+
+# Check version
+cat package.json | grep version
+# Expected: "version": "0.1.0-next.0"
+```
+
+**✅ Verify**: Version bumped to prerelease format
+
+---
+
+## Test 3: Pre-release Publish
+
+**What you're testing**: Manual pre-release publish via `intent=publish`
+
+**Duration**: ~5 minutes
+
+**Safety**: Publishes to channel tag (not `latest`)
+
+### Prerequisites
+
+- Must be in pre-mode (`.changeset/pre.json` exists)
+- Version already bumped (from Test 2)
+
+### Step 1: Run Publish Workflow
+
+```bash
+# Via CLI
+gh workflow run publish.yml -f intent=publish -f channel=next
+
+# Or via GitHub Actions UI:
+# 1. Go to: Actions → "Publish"
+# 2. Click "Run workflow"
+# 3. Intent: publish
+# 4. Channel: next
+# 5. Run workflow
+```
 
 **What happens**: Publishes `0.1.0-next.0` with `--tag next`
 
@@ -309,17 +350,37 @@ git push
   🦋  Publishing packages to npm
   🦋  success packages published successfully
   ```
-- Check npm:
-  ```bash
-  npm view @nathanvale/chatline dist-tags
-  # Expected:
-  # latest: 0.0.2
-  # next: 0.1.0-next.0
-  ```
 
 ---
 
-#### Step 5: Test Installing from Channel
+### Step 2: Verify npm Publish
+
+```bash
+# Check npm
+npm view @nathanvale/chatline dist-tags
+
+# Expected:
+# latest: 0.0.2
+# next: 0.1.0-next.0
+```
+
+**✅ Verify**: `next` tag points to prerelease version
+
+---
+
+### Step 3: Verify GitHub Prerelease
+
+```bash
+gh release list --limit=3
+
+# Expected: v0.1.0-next.0 marked as Pre-release
+```
+
+**✅ Verify**: GitHub prerelease created
+
+---
+
+### Step 4: Test Installing from Channel
 
 ```bash
 # Create temp directory
@@ -340,63 +401,57 @@ rm -rf /tmp/test-next-install
 
 ---
 
-#### Step 6: Exit Pre-Mode and Cleanup
+### Step 5: Exit Pre-Mode
 
 ```bash
 # Exit pre-mode
-bunx changeset pre exit
+gh workflow run pre-mode.yml -f action=exit
+
+# Wait and pull
+gh run list --workflow=pre-mode.yml --limit=1
+git pull
 
 # ✅ Verify: .changeset/pre.json deleted
 test -f .changeset/pre.json && echo "Still in pre-mode!" || echo "Pre-mode exited ✅"
-
-# Commit
-git add .changeset/pre.json
-git commit -m "chore: exit next pre-mode"
-git push
-
-# Merge to main (optional)
-gh pr create --title "test: next channel release" --body "Testing prerelease workflow"
-gh pr merge --squash --auto
-
-# Delete branch
-git checkout main
-git pull
-git branch -d test/channel-release-next
-git push origin --delete test/channel-release-next
 ```
 
 ---
 
-### Test 2B: Canary Snapshot
+## Test 4: Canary Snapshot
 
-**What you're testing**: Quick snapshot publish without version bump
+**What you're testing**: Quick snapshot publish via `intent=snapshot`
 
 **Duration**: ~5 minutes
 
-#### Step 1: Ensure Pre-Mode is OFF
+**Safety**: Uses `canary` tag, ephemeral version
+
+### Step 1: Ensure Pre-Mode is OFF
 
 ```bash
 # Check pre-mode status
 test -f .changeset/pre.json && echo "⚠️  In pre-mode, exit first!" || echo "✅ Not in pre-mode"
 
 # If in pre-mode, exit:
-bunx changeset pre exit
-git add .changeset/pre.json
-git commit -m "chore: exit pre-mode for canary test"
-git push
+gh workflow run pre-mode.yml -f action=exit
+gh run list --workflow=pre-mode.yml --limit=1
+git pull
 ```
 
 ---
 
-#### Step 2: Run Snapshot Workflow
+### Step 2: Run Snapshot Workflow
 
-**Via GitHub Actions UI**:
-1. Go to: Actions → "Channel Release (manual)"
-2. Click "Run workflow"
-3. Select branch: `main` (or any branch)
-4. Channel: `canary`
-5. Intent: `snapshot`
-6. Run workflow
+```bash
+# Via CLI
+gh workflow run publish.yml -f intent=snapshot -f channel=next
+
+# Or via GitHub Actions UI:
+# 1. Go to: Actions → "Publish"
+# 2. Click "Run workflow"
+# 3. Intent: snapshot
+# 4. Channel: (ignored for snapshot)
+# 5. Run workflow
+```
 
 **What happens**:
 - Creates snapshot version (e.g., `0.0.0-canary-20241203123456`)
@@ -413,7 +468,7 @@ git push
 
 ---
 
-#### Step 3: Verify Canary Tag on npm
+### Step 3: Verify Canary Tag on npm
 
 ```bash
 npm view @nathanvale/chatline dist-tags
@@ -428,7 +483,7 @@ npm view @nathanvale/chatline dist-tags
 
 ---
 
-#### Step 4: Test Installing Canary
+### Step 4: Test Installing Canary
 
 ```bash
 # Install canary version
@@ -447,116 +502,7 @@ rm -rf /tmp/test-canary
 
 ---
 
-## Test 3: Stable Release Workflow (release.yml)
-
-**What you're testing**: Manual stable release with full quality checks
-
-**Duration**: ~8 minutes
-
-**Safety**: Publishes to `latest` tag (use carefully!)
-
-### Step 1: Ensure Clean State
-
-```bash
-# Exit pre-mode if active
-test -f .changeset/pre.json && bunx changeset pre exit
-
-# Checkout main
-git checkout main
-git pull
-
-# Verify no pending changesets
-bunx changeset status
-# Expected: "🦋  No changesets present"
-```
-
-**✅ Verify**: Clean state, no changesets, not in pre-mode
-
----
-
-### Step 2: Add Changeset for Stable Release
-
-```bash
-# Add changeset
-bunx changeset
-
-# Example:
-# - Package: @nathanvale/chatline
-# - Type: patch
-# - Summary: "fix: test stable release workflow"
-
-# Commit and push
-git add .changeset/
-git commit -m "fix: add changeset for stable release test"
-git push
-```
-
-**✅ Verify**: Changeset committed to main
-
----
-
-### Step 3: Run Release Workflow
-
-**Via GitHub Actions UI**:
-1. Go to: Actions → "Release"
-2. Click "Run workflow"
-3. Select branch: `main`
-4. Run workflow
-
-**What happens**:
-1. Runs quality checks (`bun run quality-check:ci`)
-2. Runs build (`bun run build`)
-3. Generates SBOM (Software Bill of Materials)
-4. Runs `changeset version` (bumps version, updates CHANGELOG)
-5. Publishes to npm with `latest` tag
-6. Creates GitHub release
-
-**Duration**: ~5-8 minutes
-
-**✅ Verify** (in workflow logs):
-- All quality checks pass
-- Build succeeds
-- SBOM generated
-- Version bump shows in logs
-- Publish succeeds:
-  ```
-  🦋  Publishing packages to npm
-  🦋  success packages published successfully
-  ```
-
----
-
-### Step 4: Verify Stable Release
-
-```bash
-# Check npm
-npm view @nathanvale/chatline
-
-# ✅ Verify:
-# - Version bumped (e.g., 0.0.3)
-# - `latest` tag points to new version
-
-# Check GitHub releases
-gh release list
-
-# ✅ Verify:
-# - New release created with version tag (e.g., v0.0.3)
-# - Release notes contain changeset summary
-```
-
----
-
-### Step 5: Verify Provenance
-
-1. Go to: `https://www.npmjs.com/package/@nathanvale/chatline`
-2. Check provenance badge
-3. Verify workflow: `release.yml`
-
-**✅ Verify**: Provenance attestation exists for stable release
-
----
-
-## Test 4: Pre-Mode Toggle (pre-mode.yml)
+## Test 5: Pre-Mode Toggle
 
 **What you're testing**: Workflow to enter/exit prerelease mode
 
@@ -564,15 +510,19 @@ gh release list
 
 ### Step 1: Enter Pre-Mode via Workflow
 
-**Via GitHub Actions UI**:
-1. Go to: Actions → "Changesets Pre-Mode Toggle"
-2. Click "Run workflow"
-3. Select branch: `main`
-4. Action: `enter`
-5. Channel: `beta`
-6. Run workflow
+```bash
+# Via CLI
+gh workflow run pre-mode.yml -f action=enter -f channel=beta
 
-**What happens**: Commits `.changeset/pre.json` to branch
+# Or via GitHub Actions UI:
+# 1. Go to: Actions → "Changesets Pre-Mode Toggle"
+# 2. Click "Run workflow"
+# 3. Action: enter
+# 4. Channel: beta
+# 5. Run workflow
+```
+
+**What happens**: Commits `.changeset/pre.json` to main
 
 **✅ Verify**:
 - Workflow completes
@@ -587,13 +537,16 @@ gh release list
 
 ### Step 2: Exit Pre-Mode via Workflow
 
-**Via GitHub Actions UI**:
-1. Go to: Actions → "Changesets Pre-Mode Toggle"
-2. Click "Run workflow"
-3. Select branch: `main`
-4. Action: `exit`
-5. Channel: (ignored for exit)
-6. Run workflow
+```bash
+# Via CLI
+gh workflow run pre-mode.yml -f action=exit
+
+# Or via GitHub Actions UI:
+# 1. Go to: Actions → "Changesets Pre-Mode Toggle"
+# 2. Click "Run workflow"
+# 3. Action: exit
+# 4. Run workflow
+```
 
 **✅ Verify**:
 - Workflow completes
@@ -602,6 +555,38 @@ gh release list
   git pull
   test -f .changeset/pre.json && echo "❌ Still exists" || echo "✅ Deleted"
   ```
+
+---
+
+## Test 6: Pre-mode Validation Failure
+
+**What you're testing**: Workflow fails gracefully without pre-mode
+
+**Duration**: ~2 minutes
+
+### Step 1: Ensure NOT in Pre-Mode
+
+```bash
+test -f .changeset/pre.json && echo "Exit first!" || echo "✅ Ready"
+```
+
+### Step 2: Try Version (Should Fail)
+
+```bash
+gh workflow run publish.yml -f intent=version -f channel=next
+
+# Wait for workflow
+gh run list --workflow=publish.yml --limit=1
+```
+
+**✅ Verify**:
+- Workflow fails at "Validate pre-mode state" step
+- Error message: "Not in pre-release mode. Run 'Changesets Pre-Mode Toggle' workflow first."
+
+```bash
+gh run list --workflow=publish.yml --limit=1 --json conclusion
+# Should show "failure"
+```
 
 ---
 
@@ -644,14 +629,14 @@ Use this after running tests to ensure everything works:
 
 ---
 
-## Troubleshooting Tests
+## Troubleshooting
 
 ### "npm ERR! code ENEEDAUTH"
 
 **Cause**: OIDC not configured OR npm version too old
 
 **Fix**:
-1. Verify trusted publisher at npmjs.com
+1. Verify trusted publisher at npmjs.com points to `publish.yml`
 2. Ensure workflow uses Node 24 (npm 11.6+)
 3. Add `NPM_TOKEN` as fallback
 
@@ -663,26 +648,20 @@ Use this after running tests to ensure everything works:
 
 **Fix**:
 ```bash
-bunx changeset pre exit
-git add .changeset/pre.json
-git commit -m "chore: exit pre-mode"
-git push
-# Re-run workflow
+gh workflow run pre-mode.yml -f action=exit
+# Wait for workflow, then retry snapshot
 ```
 
 ---
 
-### "Not in pre-release mode" (channel-release.yml version/publish)
+### "Not in pre-release mode" (version/publish intent)
 
 **Cause**: Trying prerelease version/publish without pre-mode
 
 **Fix**:
 ```bash
-bunx changeset pre enter next
-git add .changeset/pre.json
-git commit -m "chore: enter pre-mode"
-git push
-# Re-run workflow
+gh workflow run pre-mode.yml -f action=enter -f channel=next
+# Wait for workflow, then retry
 ```
 
 ---
@@ -704,15 +683,11 @@ git push
 
 ### GitHub release not created
 
-**Cause**: `release.yml` doesn't create GitHub releases automatically
+**Cause**: Only `intent=publish` creates GitHub prereleases; `intent=auto` creates stable releases
 
-**Fix**: Use `gh release create` manually or add to workflow:
-```yaml
-- name: Create GitHub Release
-  run: gh release create v$(node -p "require('./package.json').version") --generate-notes
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
+**Fix**: Check which intent was used:
+- `auto` → stable GitHub release on publish
+- `publish` → prerelease GitHub release
 
 ---
 
@@ -725,9 +700,9 @@ Copy this template to track your test results:
 
 **Date**: YYYY-MM-DD
 **Tester**: Your Name
-**Branch**: test/release-workflows
+**Workflow**: publish.yml
 
-### Test 1: Auto-Publish Workflow
+### Test 1: Auto-Publish (Push to Main)
 - [ ] Changeset created
 - [ ] PR merged to main
 - [ ] "Version Packages" PR created
@@ -737,37 +712,41 @@ Copy this template to track your test results:
 - **Result**: ✅ Pass / ❌ Fail
 - **Notes**:
 
-### Test 2A: Prerelease Channel (next)
+### Test 2: Pre-release Version Bump
 - [ ] Entered pre-mode
 - [ ] Changeset added
-- [ ] Version workflow ran
-- [ ] Publish workflow ran
-- [ ] Package on npm with `next` tag
-- [ ] Installed from `next` tag
+- [ ] Version workflow ran (intent=version)
+- [ ] Version PR created with auto-merge
+- [ ] Version bumped to prerelease format
+- **Result**: ✅ Pass / ❌ Fail
+- **Notes**:
+
+### Test 3: Pre-release Publish
+- [ ] Publish workflow ran (intent=publish)
+- [ ] Package on npm with channel tag
+- [ ] GitHub prerelease created
+- [ ] Installed from channel tag
 - [ ] Exited pre-mode
 - **Result**: ✅ Pass / ❌ Fail
 - **Notes**:
 
-### Test 2B: Canary Snapshot
+### Test 4: Canary Snapshot
 - [ ] Pre-mode exited
-- [ ] Snapshot workflow ran
+- [ ] Snapshot workflow ran (intent=snapshot)
 - [ ] Canary tag on npm
 - [ ] Installed from canary
 - **Result**: ✅ Pass / ❌ Fail
 - **Notes**:
 
-### Test 3: Stable Release
-- [ ] Clean state verified
-- [ ] Changeset added
-- [ ] Release workflow ran
-- [ ] Package published to `latest`
-- [ ] Provenance verified
+### Test 5: Pre-Mode Toggle
+- [ ] Entered via workflow
+- [ ] Exited via workflow
 - **Result**: ✅ Pass / ❌ Fail
 - **Notes**:
 
-### Test 4: Pre-Mode Toggle
-- [ ] Entered via workflow
-- [ ] Exited via workflow
+### Test 6: Pre-mode Validation
+- [ ] Version intent fails without pre-mode
+- [ ] Error message is clear
 - **Result**: ✅ Pass / ❌ Fail
 - **Notes**:
 
@@ -775,6 +754,26 @@ Copy this template to track your test results:
 - **OIDC Working**: ✅ Yes / ❌ No
 - **All Tests Pass**: ✅ Yes / ❌ No
 - **Ready for Production**: ✅ Yes / ❌ No
+```
+
+---
+
+## Rollback Plan
+
+If the consolidated workflow has issues:
+
+```bash
+# Revert the commit
+git revert HEAD
+git push origin main
+
+# Restore old workflows from git history
+git checkout HEAD~1 -- .github/workflows/changesets-manage-publish.yml
+git checkout HEAD~1 -- .github/workflows/channel-release.yml
+git commit -m "revert: restore separate publish workflows"
+git push origin main
+
+# Update npm trusted publisher back to channel-release.yml
 ```
 
 ---
@@ -788,7 +787,7 @@ Copy this template to track your test results:
 
 2. **If tests fail**:
    - Check workflow logs for specific errors
-   - Verify OIDC configuration
+   - Verify OIDC configuration points to `publish.yml`
    - Test with `NPM_TOKEN` fallback
    - Open GitHub issue with logs
 

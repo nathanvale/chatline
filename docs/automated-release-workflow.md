@@ -113,16 +113,22 @@ pnpm quality-check --staged --fix
 
 #### 4. GitHub Actions Workflows
 
-**`.github/workflows/release.yml`:**
+**`.github/workflows/publish.yml`:** (Consolidated publishing workflow)
 
 - Triggers on push to `main` or manual workflow dispatch
-- Runs quality checks, builds, and publishes via Changesets
-- Uses NPM provenance for supply chain security
+- Handles 4 intents: `auto` | `version` | `publish` | `snapshot`
+- Uses OIDC trusted publishing (npm 11.6+) - no NPM_TOKEN needed
+- Uses GitHub App (chatline-changesets-bot) for bot commits
 
 **`.github/workflows/commitlint.yml`:**
 
 - Validates commit messages on PRs and main branch pushes
 - Ensures all commits follow conventional format
+
+**`.github/workflows/pre-mode.yml`:**
+
+- Enter/exit pre-release mode (next, beta, rc channels)
+- Must be run before `version` or `publish` intents
 
 #### 5. Package.json Scripts
 
@@ -584,47 +590,42 @@ env:
 
 ## CI/CD Pipeline
 
-### Release Workflow
+### Publish Workflow (Consolidated)
 
-**File:** `.github/workflows/release.yml`
+**File:** `.github/workflows/publish.yml`
+
+This workflow consolidates all publishing operations into a single OIDC-compatible workflow.
+npm only allows ONE trusted publisher per package, so this replaces the previous
+`changesets-manage-publish.yml` and `channel-release.yml` workflows.
 
 **Triggers:**
 
-- Push to `main` branch
-- Manual workflow dispatch
+- Push to `main` branch (auto mode)
+- Manual workflow dispatch with intent selection
+
+**Intents:**
+
+| Intent | Trigger | Action |
+|--------|---------|--------|
+| `auto` | Push to main OR manual | Changesets action (version PR or stable publish) |
+| `version` | Manual only | Create pre-release version bump PR |
+| `publish` | Manual only | Publish pre-release to npm with channel tag |
+| `snapshot` | Manual only | Publish canary snapshot |
 
 **Permissions:**
 
-- `contents: write` - Create Git tags
-- `id-token: write` - NPM provenance
+- `contents: write` - Create Git tags, branches
+- `id-token: write` - NPM OIDC trusted publishing
 - `pull-requests: write` - Create "Version Packages" PR
+- `actions: read` - Read workflow context
 
-**Steps:**
+**Authentication:**
 
-```yaml
-steps:
-  - uses: actions/checkout@v4
-  - uses: actions/setup-node@v4
-    with:
-      node-version: 22.20
-      registry-url: 'https://registry.npmjs.org'
-  - uses: pnpm/action-setup@v4
-    with:
-      version: 9
-  - run: pnpm install --frozen-lockfile
-  - name: Code quality (safe fixes)
-    run: pnpm quality-check:ci
-  - run: pnpm build
-  - name: Changeset Version / Publish
-    uses: changesets/action@v1
-    with:
-      publish: pnpm release
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-```
+1. **OIDC Trusted Publishing** (primary) - npm 11.6+ auto-detects OIDC from GitHub Actions
+2. **NPM_TOKEN** (fallback) - Only needed for bootstrap or if OIDC not configured
+3. **GitHub App** - chatline-changesets-bot for bot commits (triggers other workflows)
 
-**What happens:**
+**What happens (auto mode):**
 
 1. **No changesets present:**
    - Workflow completes without action
@@ -634,11 +635,33 @@ steps:
      - Updated `package.json` version
      - Generated `CHANGELOG.md` entries
      - Consumed changesets (deleted)
-
 3. **"Version Packages" PR merged:**
-   - Publishes package to NPM
+   - Publishes package to NPM via OIDC
    - Creates Git tag (e.g., `v0.1.0`)
-   - Generates GitHub release notes
+   - Creates GitHub release
+
+**What happens (manual intents):**
+
+- **version**: Runs `bun run version:pre`, creates PR with auto-merge
+- **publish**: Runs `bun run publish:pre`, creates GitHub prerelease
+- **snapshot**: Runs `bun run release:snapshot:canary`
+
+### Pre-release Workflow
+
+**File:** `.github/workflows/pre-mode.yml`
+
+**Purpose:** Enter or exit pre-release mode for a channel (next, beta, rc).
+
+**Usage:**
+```bash
+# Enter pre-mode
+gh workflow run pre-mode.yml -f action=enter -f channel=next
+
+# Exit pre-mode
+gh workflow run pre-mode.yml -f action=exit
+```
+
+**Required before:** `version` or `publish` intents in publish.yml
 
 ### Commitlint Workflow
 
