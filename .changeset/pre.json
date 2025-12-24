@@ -1,6 +1,6 @@
 {
-	"mode": "exit",
-	"tag": "beta",
+	"mode": "pre",
+	"tag": "next",
 	"initialVersions": {
 		"@nathanvale/chatline": "0.1.0-next.2",
 		"website": "0.0.0"
