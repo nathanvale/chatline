@@ -1,0 +1,9 @@
+{
+	"mode": "pre",
+	"tag": "next",
+	"initialVersions": {
+		"@nathanvale/chatline": "0.1.0",
+		"website": "0.0.0"
+	},
+	"changesets": []
+}
