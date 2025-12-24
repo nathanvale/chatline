@@ -1,5 +1,15 @@
 # chatline
 
+## 0.2.0
+
+### Minor Changes
+
+- [#105](https://github.com/nathanvale/chatline/pull/105) [`b8be8df`](https://github.com/nathanvale/chatline/commit/b8be8df3c321c06150fa9a9c5a5a170722496100) Thanks [@nathanvale](https://github.com/nathanvale)! - feat: test next channel prerelease
+
+### Patch Changes
+
+- [#102](https://github.com/nathanvale/chatline/pull/102) [`5756da4`](https://github.com/nathanvale/chatline/commit/5756da4aaa03f546977492d0d5498a0a9300c3e6) Thanks [@nathanvale](https://github.com/nathanvale)! - test: verify auto-publish workflow
+
 ## 0.2.0-next.0
 
 ### Minor Changes
