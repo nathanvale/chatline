@@ -9,6 +9,7 @@
 		"canary-test",
 		"test-auto-publish",
 		"test-next-channel",
+		"test-next-publish",
 		"test-prerelease"
 	]
 }
