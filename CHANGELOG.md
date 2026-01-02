@@ -1,5 +1,11 @@
 # chatline
 
+## 0.3.0-next.0
+
+### Minor Changes
+
+- [#120](https://github.com/nathanvale/chatline/pull/120) [`0694d16`](https://github.com/nathanvale/chatline/commit/0694d16fb96bd7587301bb6e1ba3a61933c013d1) Thanks [@nathanvale](https://github.com/nathanvale)! - feat: test next channel prerelease
+
 ## 0.2.1
 
 ### Patch Changes
