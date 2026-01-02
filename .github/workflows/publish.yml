@@ -180,9 +180,14 @@ jobs:
         if: steps.intent.outputs.value == 'auto' && steps.changesets.outputs.published == 'true'
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          echo "Creating GitHub release for v${VERSION}"
-          gh release create "v${VERSION}" \
-            --title "v${VERSION}" \
+          TAG="v${VERSION}"
+          echo "Creating GitHub release for ${TAG}"
+          # Create and push the tag (Changesets doesn't create tags)
+          git tag "${TAG}"
+          git push origin "${TAG}"
+          # Create the release
+          gh release create "${TAG}" \
+            --title "${TAG}" \
             --notes-file CHANGELOG.md \
             --verify-tag
         env:
