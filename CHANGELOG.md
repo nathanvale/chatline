@@ -1,5 +1,11 @@
 # chatline
 
+## 0.2.1
+
+### Patch Changes
+
+- [#115](https://github.com/nathanvale/chatline/pull/115) [`31d4a13`](https://github.com/nathanvale/chatline/commit/31d4a13c076823007873f0a403c25eb8df85b3b2) Thanks [@nathanvale](https://github.com/nathanvale)! - test: verify auto-publish workflow
+
 ## 0.2.0
 
 ### Minor Changes
