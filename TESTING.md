@@ -425,16 +425,27 @@ test -f .changeset/pre.json && echo "Still in pre-mode!" || echo "Pre-mode exite
 
 **Safety**: Uses `canary` tag, ephemeral version
 
-### Step 1: Ensure Pre-Mode is OFF
+### Step 1: Ensure Pre-Mode is FULLY OFF
+
+> **Important**: Snapshot won't work if pre.json exists (even with `"mode": "exit"`).
+> You must fully exit pre-mode by consuming changesets.
 
 ```bash
 # Check pre-mode status
 test -f .changeset/pre.json && echo "⚠️  In pre-mode, exit first!" || echo "✅ Not in pre-mode"
 
-# If in pre-mode, exit:
+# If in pre-mode, fully exit (two-step process):
+# Step 1: Set mode to exit
 gh workflow run pre-mode.yml -f action=exit
-gh run list --workflow=pre-mode.yml --limit=1
+# Wait for workflow, merge the PR
+
+# Step 2: Consume changesets to delete pre.json
+gh workflow run publish.yml -f intent=auto
+# Wait for workflow, merge "Version Packages" PR if created
+
+# Verify pre.json is deleted
 git pull
+test -f .changeset/pre.json && echo "⚠️  Still exists!" || echo "✅ Ready for snapshot"
 ```
 
 ---
@@ -522,13 +533,25 @@ gh workflow run pre-mode.yml -f action=enter -f channel=beta
 # 5. Run workflow
 ```
 
-**What happens**: Commits `.changeset/pre.json` to main
+**What happens**: Creates a PR to add `.changeset/pre.json` (requires merge)
+
+> **Note**: The pre-mode workflow creates a PR instead of directly committing to main
+> (branch protection). You'll need to merge the PR to activate pre-mode.
 
 **✅ Verify**:
 - Workflow completes
-- Check commit:
+- PR created: `chore(pre): enter beta channel`
+- Merge the PR:
   ```bash
-  git pull
+  # PR may need pr-quality checks to pass first
+  # If checks don't trigger, push empty commit:
+  git fetch origin <branch> && git checkout <branch>
+  git commit --allow-empty -m "chore: trigger checks"
+  git push origin <branch>
+
+  # Then merge
+  gh pr merge <PR-number> --squash
+  git checkout main && git pull
   cat .changeset/pre.json
   # Expected: {"mode": "pre", "tag": "beta", ...}
   ```
@@ -548,10 +571,26 @@ gh workflow run pre-mode.yml -f action=exit
 # 4. Run workflow
 ```
 
+**What happens**: Creates a PR that sets `"mode": "exit"` in pre.json
+
+> **Important**: Exiting pre-mode is a two-step process:
+> 1. The exit workflow sets `"mode": "exit"` (merge this PR)
+> 2. Run `intent=auto` to consume changesets and fully delete pre.json
+
 **✅ Verify**:
 - Workflow completes
-- `.changeset/pre.json` deleted:
+- PR created: `chore(pre): exit <channel> channel`
+- Merge the PR (may need empty commit to trigger checks)
+- After merge, pre.json has `"mode": "exit"`
+- To fully exit (delete pre.json):
   ```bash
+  # Run auto to consume changesets and delete pre.json
+  gh workflow run publish.yml -f intent=auto
+
+  # This creates "Version Packages" PR if changesets exist
+  # Merge that PR to fully exit pre-mode
+
+  # Verify
   git pull
   test -f .changeset/pre.json && echo "❌ Still exists" || echo "✅ Deleted"
   ```
@@ -631,6 +670,31 @@ Use this after running tests to ensure everything works:
 
 ## Troubleshooting
 
+### PR checks not running (workflow-created branches)
+
+**Cause**: PRs created by `workflow_dispatch` don't trigger `pull_request` workflows
+
+**Fix**: Push an empty commit to trigger checks:
+```bash
+git fetch origin <branch>
+git checkout <branch>
+git commit --allow-empty -m "chore: trigger checks"
+git push origin <branch>
+```
+
+---
+
+### PR won't merge (branch protection)
+
+**Cause**: "All checks passed" job hasn't run yet
+
+**Fix**:
+1. Check `gh pr checks <PR-number>` for missing checks
+2. If pr-quality workflow hasn't run, push empty commit (see above)
+3. Wait for "All checks passed" job to complete
+
+---
+
 ### "npm ERR! code ENEEDAUTH"
 
 **Cause**: OIDC not configured OR npm version too old
@@ -644,12 +708,36 @@ Use this after running tests to ensure everything works:
 
 ### "Snapshot release is not allowed in pre mode"
 
-**Cause**: Trying canary snapshot while in pre-mode
+**Cause**: Trying canary snapshot while in pre-mode (including `"mode": "exit"` state)
 
 **Fix**:
 ```bash
+# Exit pre-mode
 gh workflow run pre-mode.yml -f action=exit
-# Wait for workflow, then retry snapshot
+# Wait for workflow, merge PR
+
+# Fully consume exit state (deletes pre.json)
+gh workflow run publish.yml -f intent=auto
+# Wait for workflow, merge "Version Packages" PR if created
+
+# Verify pre.json is deleted
+test -f .changeset/pre.json && echo "Still in pre-mode!" || echo "Ready for snapshot"
+
+# Now retry snapshot
+gh workflow run publish.yml -f intent=snapshot
+```
+
+---
+
+### Version/publish succeeds in "mode: exit" state
+
+**Not a bug**: The workflow treats `"mode": "exit"` as still valid for version operations.
+This allows completing any in-flight pre-release work before fully exiting.
+
+To fully exit pre-mode (delete pre.json):
+```bash
+gh workflow run publish.yml -f intent=auto
+# Merge "Version Packages" PR if created
 ```
 
 ---
