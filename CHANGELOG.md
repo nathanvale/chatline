@@ -1,5 +1,11 @@
 # chatline
 
+## 0.3.1
+
+### Patch Changes
+
+- [#124](https://github.com/nathanvale/chatline/pull/124) [`ddfd134`](https://github.com/nathanvale/chatline/commit/ddfd134cf7c5510bf190abde799394cd67a21555) Thanks [@nathanvale](https://github.com/nathanvale)! - test: verify canary snapshot workflow
+
 ## 0.3.0
 
 ### Minor Changes
