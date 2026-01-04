@@ -1,8 +1,121 @@
 # Release Workflow Testing Guide (ADHD-friendly)
 
-> **Quick nav**: [Auto-Publish](#test-1-auto-publish-push-to-main) | [Pre-release Version](#test-2-pre-release-version-bump) | [Pre-release Publish](#test-3-pre-release-publish) | [Snapshot](#test-4-canary-snapshot) | [Pre-mode Toggle](#test-5-pre-mode-toggle) | [Verification](#verification-checklist)
+> **Quick nav**: [Auto-Publish](#test-1-auto-publish-push-to-main) | [Pre-release Version](#test-2-pre-release-version-bump) | [Pre-release Publish](#test-3-pre-release-publish) | [Snapshot](#test-4-canary-snapshot) | [Pre-mode Toggle](#test-5-pre-mode-toggle) | [Known Issues](#known-issues) | [Troubleshooting](#troubleshooting)
 
 Visual structure. Step-by-step. No surprises.
+
+---
+
+## ⚠️ Known Issues & Gotchas
+
+Read this section FIRST to avoid common pitfalls discovered during testing.
+
+### 1. Workflow-Created PRs Don't Trigger CI Checks
+
+**Impact**: PRs created by workflows (pre-mode toggle, Version Packages) won't have CI checks run automatically.
+
+**Why**: GitHub doesn't trigger `pull_request` events for PRs created by `workflow_dispatch` or GitHub Actions tokens.
+
+**Solution**: Push an empty commit to trigger checks:
+```bash
+gh pr checkout <PR-number>
+git commit --allow-empty -m "chore: trigger checks"
+git push
+```
+
+**Applies to**:
+- `chore(pre): enter/exit <channel> channel` PRs
+- `chore: version packages` PRs (sometimes)
+- Any PR created by a workflow
+
+---
+
+### 2. Canary Snapshot Requires Pending Changesets
+
+**Impact**: Running `intent=snapshot` without changesets will publish the CURRENT version with canary tag instead of a proper snapshot version.
+
+**Why**: `changeset version --snapshot canary` only works when there are pending changesets to apply. Without changesets, it's a no-op.
+
+**Symptom**: Canary publishes `0.3.0` instead of `0.0.0-canary-YYYYMMDDHHMMSS`
+
+**Solution**: Always create a changeset before running snapshot:
+```bash
+# Create a changeset first
+cat > .changeset/snapshot-test.md << 'EOF'
+---
+"@nathanvale/chatline": patch
+---
+
+test: canary snapshot
+EOF
+
+git add .changeset/ && git commit -m "chore: add changeset for snapshot" && git push
+
+# Now run snapshot
+gh workflow run publish.yml -f intent=snapshot
+```
+
+---
+
+### 3. Pre.json Persists After Exit (No Changesets)
+
+**Impact**: After running exit workflow, `.changeset/pre.json` with `"mode": "exit"` remains if no changesets exist.
+
+**Why**: Changesets only deletes `pre.json` when consuming changesets during version bump. No changesets = file persists.
+
+**Not a bug**: The `"mode": "exit"` state is valid - it allows completing any in-flight prerelease work.
+
+**To fully delete pre.json**:
+```bash
+# Create a changeset to consume
+bun version:gen
+git add .changeset/ && git commit -m "chore: changeset to exit pre-mode" && git push
+
+# Run auto to consume and delete pre.json
+gh workflow run publish.yml -f intent=auto
+# Merge the "Version Packages" PR
+```
+
+---
+
+### 4. Version/Publish Works in "mode: exit" State
+
+**Impact**: The validation step passes even when `pre.json` has `"mode": "exit"` (file existence check only).
+
+**Current behavior**: This is intentional - allows completing pre-release work before fully exiting.
+
+**Future improvement**: Could add stricter validation to check `"mode": "pre"` specifically.
+
+---
+
+## ✅ Fixes Applied (from 2026-01-03 Testing)
+
+These issues were discovered and fixed during comprehensive testing:
+
+### 1. PR Title Lint Failure (Fixed in PR #117)
+
+**Problem**: Changesets action created "Version Packages" PR which failed PR title lint (not conventional commit format).
+
+**Fix**: Added `title: 'chore: version packages'` parameter to changesets/action in `publish.yml`:
+```yaml
+- uses: changesets/action@v1
+  with:
+    title: 'chore: version packages'
+    commit: 'chore: version packages'
+```
+
+### 2. GitHub Release Tag Not Found (Fixed in PR #118)
+
+**Problem**: "Create GitHub Release" step failed with `tag doesn't exist` because Changesets doesn't create git tags.
+
+**Fix**: Added git tag creation before `gh release create`:
+```yaml
+- name: Create GitHub Release (stable)
+  run: |
+    git tag "${TAG}"
+    git push origin "${TAG}"
+    gh release create "${TAG}" ...
+```
 
 ---
 
@@ -450,7 +563,36 @@ test -f .changeset/pre.json && echo "⚠️  Still exists!" || echo "✅ Ready f
 
 ---
 
-### Step 2: Run Snapshot Workflow
+### Step 2: Create a Changeset (REQUIRED)
+
+> **⚠️ Critical**: Canary snapshot REQUIRES pending changesets to work correctly.
+> Without changesets, it will publish the current version instead of a snapshot version.
+> See [Known Issues #2](#2-canary-snapshot-requires-pending-changesets).
+
+```bash
+# Check for existing changesets
+ls .changeset/*.md 2>/dev/null | grep -v README.md || echo "⚠️  No changesets - create one!"
+
+# Create a changeset for the snapshot
+cat > .changeset/canary-snapshot.md << 'EOF'
+---
+"@nathanvale/chatline": patch
+---
+
+test: verify canary snapshot workflow
+EOF
+
+# Commit and push
+git add .changeset/canary-snapshot.md
+git commit -m "chore: add changeset for canary snapshot"
+git push
+```
+
+**✅ Verify**: Changeset file exists in `.changeset/` directory
+
+---
+
+### Step 3: Run Snapshot Workflow
 
 ```bash
 # Via CLI
@@ -477,9 +619,12 @@ gh workflow run publish.yml -f intent=snapshot -f channel=next
   🦋  success packages published successfully
   ```
 
+> **⚠️ If you see the current version (e.g., `0.3.0`) instead of `0.0.0-canary-*`**:
+> You forgot to create a changeset. See Step 2 above.
+
 ---
 
-### Step 3: Verify Canary Tag on npm
+### Step 4: Verify Canary Tag on npm
 
 ```bash
 npm view @nathanvale/chatline dist-tags
@@ -490,11 +635,11 @@ npm view @nathanvale/chatline dist-tags
 # canary: 0.0.0-canary-20241203123456
 ```
 
-**✅ Verify**: `canary` tag exists and points to snapshot version
+**✅ Verify**: `canary` tag exists and points to snapshot version (format: `0.0.0-canary-YYYYMMDDHHMMSS`)
 
 ---
 
-### Step 4: Test Installing Canary
+### Step 5: Test Installing Canary
 
 ```bash
 # Install canary version
@@ -729,6 +874,31 @@ gh workflow run publish.yml -f intent=snapshot
 
 ---
 
+### Canary snapshot published current version instead of snapshot
+
+**Cause**: No changesets exist. The `changeset version --snapshot canary` command requires pending changesets.
+
+**Symptom**: npm shows `canary: 0.3.0` instead of `canary: 0.0.0-canary-YYYYMMDDHHMMSS`
+
+**Fix**: Create a changeset before running snapshot:
+```bash
+# Create a changeset
+cat > .changeset/snapshot.md << 'EOF'
+---
+"@nathanvale/chatline": patch
+---
+
+test: canary snapshot
+EOF
+
+git add .changeset/ && git commit -m "chore: add changeset" && git push
+
+# Now retry snapshot
+gh workflow run publish.yml -f intent=snapshot
+```
+
+---
+
 ### Version/publish succeeds in "mode: exit" state
 
 **Not a bug**: The workflow treats `"mode": "exit"` as still valid for version operations.
@@ -819,9 +989,10 @@ Copy this template to track your test results:
 - **Notes**:
 
 ### Test 4: Canary Snapshot
-- [ ] Pre-mode exited
+- [ ] Pre-mode exited (pre.json deleted)
+- [ ] Changeset created before snapshot
 - [ ] Snapshot workflow ran (intent=snapshot)
-- [ ] Canary tag on npm
+- [ ] Canary tag on npm (format: `0.0.0-canary-YYYYMMDDHHMMSS`)
 - [ ] Installed from canary
 - **Result**: ✅ Pass / ❌ Fail
 - **Notes**:
