@@ -305,21 +305,18 @@ Create with `bun cli init` or see `examples/imessage-config.yaml`
    - Delta quality checks (coverage must not decrease)
    - Package hygiene (publint, attw)
 
-2. **Changesets Manage & Publish** (`changesets-manage-publish.yml`)
-   - Opens "Version Packages" PR
+2. **Publish** (`publish.yml`)
+   - Consolidated workflow (auto-publish, pre-releases, snapshots)
+   - Opens "chore: version packages" PR
    - Auto-merges after checks pass
-   - Publishes to npm with provenance
+   - Publishes to npm with OIDC trusted publishing
 
 3. **Security Scanning**
    - CodeQL (JS/TS analysis)
    - OSV Scanner (dependency vulnerabilities)
    - Dependency Review (PR checks)
 
-4. **Pre-Release Channels** (`channel-release.yml`)
-   - `next`, `beta`, `rc` for staged releases
-   - Canary snapshots for testing
-
-5. **Automated Dependency Maintenance**
+4. **Automated Dependency Maintenance**
    - Renovate (npm/pnpm, grouped, safe automerge)
    - Dependabot (GitHub Actions only)
 

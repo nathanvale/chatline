@@ -11,7 +11,7 @@ permissions:
 jobs:
   enable-automerge:
     if: |
-      github.event.pull_request.title == 'Version Packages' &&
+      github.event.pull_request.title == 'chore: version packages' &&
       contains(github.event.pull_request.user.login, 'github-actions')
     runs-on: ubuntu-latest
     timeout-minutes: 5

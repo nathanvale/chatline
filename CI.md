@@ -4,7 +4,7 @@
 > **Visual learner?** See [RELEASES.mmd](./RELEASES.mmd) for a flowchart of release paths.
 
 Quick rules:
-- 20 automated workflows handle everything from linting to releases
+- 19 automated workflows handle everything from linting to releases
 - Pre-commit hooks for fast feedback, CI for comprehensive validation
 - Single gate job (`All checks passed`) is the only required status check
 - Branch protection configured for safe collaboration without blocking automation
@@ -75,7 +75,7 @@ Source: [Pre-commit vs. CI Best Practices](https://switowski.com/blog/pre-commit
 
 ## Workflow Inventory
 
-**Total**: 20 automated workflows
+**Total**: 19 automated workflows
 
 ### Core Quality Workflows (Run on PRs)
 
@@ -91,8 +91,7 @@ Source: [Pre-commit vs. CI Best Practices](https://switowski.com/blog/pre-commit
 
 | Workflow | Trigger | Purpose | Details |
 |----------|---------|---------|---------|
-| **Changesets Manage & Publish** | main push | Auto Version Packages PR + publish | [RELEASES.md](./RELEASES.md#1-auto-publish-on-main) |
-| **Channel Release** | Manual | Prerelease/canary publishing | [RELEASES.md](./RELEASES.md#2-manual-channel-release) |
+| **Publish** | main push + Manual | Consolidated workflow: auto Version Packages PR, publish stable/prerelease, snapshots | [RELEASES.md](./RELEASES.md) |
 | **Release** | Manual | Stable release with quality checks | [RELEASES.md](./RELEASES.md#3-manual-stable-release) |
 | **Alpha Snapshot** | Daily (schedule) | Automated alpha builds | [RELEASES.md](./RELEASES.md) |
 | **Version Packages Auto-Merge** | PR from bot | Enable auto-merge on Version Packages | [Troubleshooting](./RELEASES.md#troubleshooting) |
@@ -102,9 +101,9 @@ Source: [Pre-commit vs. CI Best Practices](https://switowski.com/blog/pre-commit
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| **Security Scans** | Daily (schedule) | OSV vulnerability scanning |
-| **Dependency Review** | PR | Block PRs with vulnerable deps |
-| **CodeQL** | PR + main push | Static analysis security scanning |
+| **Security Scans** | Weekly (Mon 06:00 UTC) | OSV vulnerability scanning |
+| **Dependency Review** | PR | Advisory review of vulnerable deps (non-blocking) |
+| **CodeQL** | PR + main push + weekly | Static analysis security scanning |
 
 ### Automation & Maintenance
 
@@ -136,12 +135,13 @@ Source: [Pre-commit vs. CI Best Practices](https://switowski.com/blog/pre-commit
 graph TD
     A[PR Quality Workflow] --> B[Lint]
     A --> C[Typecheck]
+    A --> F[Lint Scripts]
     B --> D[Test + Coverage]
     C --> D
     D --> E[Quality Check]
-    E --> F[Lint Scripts]
-    B --> F
-    D --> G[Gate: All checks passed]
+    B --> G[Gate: All checks passed]
+    C --> G
+    D --> G
     E --> G
     F --> G
 ```
@@ -249,16 +249,22 @@ See [RELEASES.md](./RELEASES.md) for complete release workflow documentation.
 
 **Quick summary**:
 
-### Changesets Manage & Publish (changesets-manage-publish.yml)
-- **Auto-creates "Version Packages" PR** when changesets exist
-- **Auto-publishes to npm** when Version Packages PR is merged
-- **Uses OIDC trusted publishing** (no NPM_TOKEN needed)
-- **Uses GitHub App authentication** to trigger workflows on bot PRs ([see GitHub App Authentication](#github-app-authentication))
+### Publish (publish.yml)
 
-### Channel Release (channel-release.yml)
-- **Manual workflow** for prerelease channels (next/beta/rc/canary)
-- **Three modes**: version, publish, snapshot
-- **OIDC support** for secure publishing
+> **Note**: This workflow consolidates the former `changesets-manage-publish.yml` and `channel-release.yml` into a single OIDC-compatible workflow (npm only allows one trusted publisher per package).
+
+**Four intent modes**:
+- **auto** (default on main push): Opens "chore: version packages" PR or publishes stable releases
+- **version**: Creates pre-release version bump PR (requires pre-mode)
+- **publish**: Publishes pre-release to npm (requires pre-mode)
+- **snapshot**: Creates canary snapshot release
+
+**Features**:
+- **Auto-creates "chore: version packages" PR** when changesets exist
+- **Auto-publishes to npm** when Version Packages PR is merged
+- **Uses OIDC trusted publishing** (no NPM_TOKEN needed after initial setup)
+- **Uses GitHub App authentication** to trigger workflows on bot PRs ([see GitHub App Authentication](#github-app-authentication))
+- **Pre-release channels**: next, beta, rc
 
 ### Release (release.yml)
 - **Manual stable releases** with full quality checks
@@ -273,24 +279,27 @@ See [RELEASES.md](./RELEASES.md) for complete release workflow documentation.
 
 ### Security Scans (security.yml)
 
-**Daily vulnerability scanning with OSV.**
+**Weekly vulnerability scanning with OSV.**
 
-**Trigger**: Daily at 02:00 UTC
+**Trigger**: Weekly on Mondays at 06:00 UTC (+ manual `workflow_dispatch`)
 
-**Command**: `osv-scanner --lockfile=bun.lock`
+**Action**: `google/osv-scanner-action` scanning the entire repository
 
 **Purpose**: Detect known vulnerabilities in dependencies
 
 ### Dependency Review (dependency-review.yml)
 
-**Blocks PRs with vulnerable or restricted dependencies.**
+**Advisory review of dependency changes (non-blocking).**
+
+> **Note**: This workflow uses `continue-on-error: true` and is advisory only. It will not block PRs from merging.
 
 **Trigger**: Pull requests
 
-**Checks**:
-- Known security vulnerabilities
-- License compliance
-- Dependency changes
+**Features**:
+- Posts summary comment on PRs (`comment-summary-in-pr: 'always'`)
+- Checks known security vulnerabilities
+- Reviews license compliance
+- Analyzes dependency changes
 
 **Action**: `actions/dependency-review-action`
 
@@ -302,10 +311,11 @@ See [RELEASES.md](./RELEASES.md) for complete release workflow documentation.
 - Push to `main`
 - Pull requests to `main`
 - Weekly schedule (Monday 05:00 UTC)
+- Manual `workflow_dispatch`
 
 **Language**: JavaScript/TypeScript
 
-**Queries**: security-and-quality
+**Build mode**: `none` (uses default CodeQL queries)
 
 **Purpose**: Find security vulnerabilities in code
 
@@ -477,10 +487,9 @@ env:
 ```
 
 **Workflows Using GitHub App**:
-1. `changesets-manage-publish.yml` - Creates/updates Version Packages PR and publishes
+1. `publish.yml` - Creates/updates Version Packages PR and publishes (stable + pre-release)
 2. `version-packages-auto-merge.yml` - Enables auto-merge on Version Packages PR
-3. `channel-release.yml` - Pre-release channel management
-4. `release.yml` - Manual stable releases
+3. `release.yml` - Manual stable releases
 
 ### Security Considerations
 
@@ -701,7 +710,7 @@ TF_BUILD=true TZ=UTC bun test --recursive
    - Pattern: Don't test test helpers
 
 3. **Lower threshold** (not recommended)
-   - Edit: `pr-quality.yml` line 124-126
+   - Edit: `pr-quality.yml` lines 153-155 (coverage-comment action inputs)
    - Discuss: With team first
 
 ---
@@ -857,24 +866,23 @@ This documentation is based on industry best practices and research:
 | PR Title Lint | pr-title.yml | PR | PR title format check |
 | Workflow Lint | workflow-lint.yml | PR | GitHub Actions syntax check |
 | Node.js Compatibility | node-compat.yml | PR | Multi-version Node testing |
-| Changesets Manage & Publish | changesets-manage-publish.yml | main push | Auto version + publish |
-| Channel Release | channel-release.yml | Manual | Prerelease publishing |
+| Publish | publish.yml | main push + Manual | Consolidated: auto version/publish, prerelease, snapshots |
 | Release | release.yml | Manual | Stable release |
 | Alpha Snapshot | alpha-snapshot.yml | Daily | Automated alpha builds |
 | Version Packages Auto-Merge | version-packages-auto-merge.yml | Bot PR | Enable auto-merge |
 | Pre-Mode Toggle | pre-mode.yml | Manual | Enter/exit pre-mode |
-| Security Scans | security.yml | Daily | OSV vulnerability scan |
-| Dependency Review | dependency-review.yml | PR | Block vulnerable deps |
+| Security Scans | security.yml | Weekly (Mon) | OSV vulnerability scan |
+| Dependency Review | dependency-review.yml | PR | Advisory review of deps (non-blocking) |
 | CodeQL | codeql.yml | PR + main + weekly | Static security analysis |
 | Auto-generate Changeset | autogenerate-changeset.yml | PR | Create missing changeset |
 | Dependabot Auto-Merge | dependabot-auto-merge.yml | Dependabot PR | Auto-merge deps |
 | Deploy Documentation | deploy-docs.yml | main push | Deploy docs site |
 | Tag Assets | tag-assets.yml | Tag push | SBOM + GitHub release |
-| Package Hygiene | package-hygiene.yml | Manual | Validate package setup |
+| Package Hygiene | package-hygiene.yml | Manual + PR | Validate package setup |
 | Emergency Rollback | emergency-rollback.yml | Manual | Revert releases |
 
 ---
 
-**Last updated**: 2025-12-03
+**Last updated**: 2026-01-08
 **Maintained by**: Development team
 **Questions?** Open an issue or see [RELEASES.md](./RELEASES.md) for release-specific docs
