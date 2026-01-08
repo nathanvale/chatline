@@ -67,15 +67,4 @@ How-to guides and best practices.
 
 ---
 
-## Archive
-
-Historical documents preserved for context.
-
-| Document | Description |
-|----------|-------------|
-| [imessage-pipeline-refactor-report.md](archive/imessage-pipeline-refactor-report.md) | Original refactor analysis |
-| [diagrams/pre-mode-workflow-simple.md](archive/diagrams/pre-mode-workflow-simple.md) | Pre-mode workflow diagram |
-
----
-
 **Last Updated:** 2026-01-09
