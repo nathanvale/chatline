@@ -1,10 +1,11 @@
 ## Bun single‑repo best practices (testing, linting, releases)
 
-Date: 2025‑11‑11
+> **Note:** This was an evaluation doc from Nov 2025. The project now uses Bun
+> for local development and Biome for linting/formatting. pnpm is used in CI.
 
-This note evaluates moving the repository to “Bun for everything,” including the
+This note evaluates moving the repository to "Bun for everything," including the
 test runner, and outlines practical options with current dependencies (sharp,
-better‑sqlite3, Firecrawl SDK), Vitest, ESLint, Prettier, and Changesets.
+better‑sqlite3, Firecrawl SDK) and Vitest.
 
 ---
 
@@ -159,10 +160,9 @@ Note: `bunx vitest` is experimental in this context. Prefer the standard
 
 ### What stays the same
 
-- pnpm remains the package manager of record.
 - Changesets continues to version and publish.
-- ESLint flat config and Prettier rules unchanged; you can invoke them through
-  pnpm or bunx locally.
+- Bun for local development, pnpm for CI stability.
+- Biome for linting and formatting (replaced ESLint/Prettier).
 
 ---
 

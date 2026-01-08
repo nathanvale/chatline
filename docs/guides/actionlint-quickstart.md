@@ -34,4 +34,4 @@ This is a short, practical guide for using actionlint locally in this repo.
 - Python snippet checks (pyflakes) are optional. If missing, actionlint will
   note that the rule is disabled; this is fine unless you need Python linting
   inside workflow steps.
-- For deeper guidance, see `docs/actionlint-best-practices.md`.
+- For deeper guidance, see `docs/guides/actionlint-best-practices.md`.

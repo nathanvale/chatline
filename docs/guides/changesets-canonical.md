@@ -32,7 +32,7 @@ That’s it—no manual tagging or npm publish.
   - `feat: ...` → minor release
   - `fix: ...` → patch release
   - `refactor!: ...` or body includes `BREAKING CHANGE:` → major release
-- Optional: add a changeset manually with `pnpm version:gen` if you want custom
+- Optional: add a changeset manually with `bun version:gen` if you want custom
   notes or multi-package details. If you don’t, the bot will generate one for
   you based on the PR title.
 - If you want prerelease streams:
@@ -49,8 +49,8 @@ That’s it. No tagging or manual publishes.
      the PR title to determine semver bump.
 2. On push to main:
    - `Publish` opens/updates the **Version Packages** PR or
-     (when that PR merges) publishes to npm with `pnpm release` and creates the
-     tag.
+     (when that PR merges) publishes to npm with `changeset publish` and creates
+     the tag.
 3. Nightly at 02:00 UTC (only when pre-mode is active):
    - `Alpha Snapshot Release` publishes `-alpha-YYYYMMDDHHMMSS` snapshots to the
      `alpha` npm dist-tag. If pre-mode is off, this job skips to avoid confusion

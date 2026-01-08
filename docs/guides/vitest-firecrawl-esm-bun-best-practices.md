@@ -1,7 +1,10 @@
 # Vitest + Firecrawl ESM & Bun Best Practices for CLI Projects
 
-**Research Date:** 11 November 2025  
-**Sources:** Context7 (Vitest & Firecrawl official docs)  
+> **Note:** This is research documentation from Nov 2025. Some details may be
+> outdated. The project now uses Bun for local dev and Biome for linting.
+
+**Research Date:** 11 November 2025
+**Sources:** Context7 (Vitest & Firecrawl official docs)
 **Project Type:** TypeScript CLI tool with ESM modules
 
 ## Executive Summary
