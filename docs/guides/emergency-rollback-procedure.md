@@ -140,4 +140,4 @@ deprecate instead whenever possible.
 
 - [NPM Deprecate Docs](https://docs.npmjs.com/cli/v9/commands/npm-deprecate)
 - [NPM Unpublish Policy](https://docs.npmjs.com/policies/unpublish)
-- `docs/automated-release-workflow.md` - Normal release process
+- `docs/guides/automated-release-workflow.md` - Normal release process

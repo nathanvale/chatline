@@ -209,4 +209,4 @@ See [RELEASES.md - Troubleshooting OIDC](/Users/nathanvale/code/imessage-timelin
 - [GitHub Actions Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 
 **Release Process:**
-- `docs/automated-release-workflow.md` - How publishing workflows handle auth
+- `docs/guides/automated-release-workflow.md` - How publishing workflows handle auth

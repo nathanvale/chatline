@@ -38,9 +38,9 @@ Current config includes:
 ### Local usage
 
 ```bash
-pnpm build
-pnpm hygiene       # runs publint + attw
-pnpm pack:dry      # creates tarball in ./.pack and lists its contents
+bun run build
+bun run hygiene       # runs publint + attw
+bun run pack:dry      # creates tarball in ./.pack and lists its contents
 ```
 
 ### CI workflow
@@ -50,7 +50,7 @@ pnpm pack:dry      # creates tarball in ./.pack and lists its contents
 - Harden-Runner (audit mode)
 - Install, build
 - publint + attw
-- pnpm pack with artifact upload
+- Pack with artifact upload
 
 ## Checklist before publishing
 
@@ -66,8 +66,8 @@ pnpm pack:dry      # creates tarball in ./.pack and lists its contents
 
 ## Tarball size and contents
 
-We prefer small, predictable tarballs. Use `pnpm pack:dry` to inspect the exact
-contents. If extra files slip in, tighten `files` or add `.npmignore` (subdirs
+We prefer small, predictable tarballs. Use `bun run pack:dry` to inspect the
+exact contents. If extra files slip in, tighten `files` or add `.npmignore` (subdirs
 only).
 
 ## Types guidance
@@ -80,7 +80,7 @@ only).
 ## Security & provenance
 
 - Stable release workflow generates SBOM and publishes with OIDC provenance.
-- See `docs/security-supply-chain.md` for details and controls.
+- See `docs/architecture/security-supply-chain.md` for details and controls.
 
 ## References
 

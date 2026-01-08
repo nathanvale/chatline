@@ -33,36 +33,34 @@ respond to security events.
   - Publint + AreTheTypesWrong run in CI to ensure publish metadata and types
     are correct.
   - Location: `.github/workflows/package-hygiene.yml` and
-    `docs/package-hygiene.md`
+    `docs/guides/package-hygiene.md`
 
 - Provenance and SBOM on release
   - Releases publish with npm OIDC provenance and produce a CycloneDX SBOM
     artifact.
   - Location: `.github/workflows/release.yml` and
-    `docs/security-supply-chain.md`
+    `docs/architecture/security-supply-chain.md`
 
 ### Manual maintenance (as needed)
 
 - Inspect available updates
-  - Outdated overview: `pnpm outdated`
-  - Why a package is included: `pnpm why <name>`
+  - Why a package is included: `bun pm why <name>`
 
 - Perform safe upgrades locally
-  - Interactive constrained update: `pnpm up -Lri`
-  - Full latest (be cautious): `pnpm up --latest`
+  - Update dependencies: `bun update`
   - After upgrading: run tests and package checks
-    - `pnpm test`
-    - `pnpm coverage` (optional)
-    - `pnpm hygiene`
+    - `bun test`
+    - `bun run coverage` (optional)
+    - `bun run hygiene`
 
 - Audit vulnerabilities
-  - Quick scan: `pnpm audit` (triage, link to advisories)
+  - Quick scan: `bun run security:audit` (triage, link to advisories)
   - If transitive: prefer upgrading the top-level maintainer package first
 
 ### Pull request workflow
 
-1. For devDependencies: Dependabot PRs labeled `dev-dependencies` will
-   auto-merge after CI and scope checks.
+1. For devDependencies: Renovate PRs labeled `deps-dev` will auto-merge after
+   CI and scope checks.
 2. For direct/runtime deps: Review carefully, ensure tests are green, and add a
    Changeset entry as needed (e.g., `fix:` for security patches, `chore:` for
    routine bumps).
@@ -72,7 +70,7 @@ respond to security events.
 ### Security remediation playbook
 
 1. OSV alerts or Dependabot security notifications surface a CVE.
-2. Confirm impact with `pnpm why` and the SBOM artifact from the latest release.
+2. Confirm impact with `bun pm why` and the SBOM artifact from the latest release.
 3. Identify the minimal upgrade path (patch/minor preferred). Update and open a
    PR with a Changeset.
 4. If no fix exists, consider pinning, patching (e.g., `patch-package`), or
@@ -82,26 +80,27 @@ respond to security events.
 
 - Engines: `package.json` specifies the supported Node range. Keep local Node
   aligned with `engines.node` for consistent CI parity.
-- Package manager: We standardize on `pnpm` (lockfile is authoritative).
+- Package manager: We use `bun` for local development (lockfile is
+  authoritative). CI uses pnpm for stability.
 
 ### Quick reference commands
 
 ```bash
-# List available updates
-pnpm outdated
+# Why a package is included
+bun pm why <name>
 
-# Interactive minor/patch updates, with prompts
-pnpm up -Lri
+# Update dependencies
+bun update
 
 # Run tests and coverage
-pnpm test
-pnpm coverage
+bun test
+bun run coverage
 
 # Package hygiene checks (publint + types)
-pnpm hygiene
+bun run hygiene
 
 # Vulnerability scan
-pnpm audit
+bun run security:audit
 ```
 
 ### Renovate Quickstart
@@ -120,8 +119,9 @@ pnpm audit
 ### FAQ
 
 - Why Renovate over Dependabot?
-  - Advanced grouping, custom schedules, pnpm lockfile maintenance, semantic
-    commit prefixes, and auto-merge logic are centralized.
+  - Advanced grouping, custom schedules, lockfile maintenance, semantic commit
+    prefixes, and auto-merge logic are centralized. Dependabot handles GitHub
+    Actions updates only.
 - How are auto-merges restricted?
   - Only dev minor/patch updates meeting branch status and file-change
     constraints; major bumps always require manual review.

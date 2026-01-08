@@ -28,25 +28,25 @@ hardening, and future provenance/signing enhancements.
    - `security.yml` runs OSV-Scanner weekly and on main updates, surfacing newly
      disclosed vulnerabilities (Code Scanning alerts UI if elevated).
 6. Harden-Runner (Egress / Process Audit)
-   - Added to all workflows as first step with `egress-policy: audit` to
-     baseline outbound calls and detect anomalies (supply chain compromise early
-     warning).
+   - Added to security-critical workflows as first step with `egress-policy:
+     audit` to baseline outbound calls and detect anomalies (supply chain
+     compromise early warning).
 7. Release Channel Isolation
-   - Dedicated channel workflow (`pre-mode.yml`) enables prerelease tags
-     (`next`, `beta`, `rc`, `canary`) without blocking stable `main` releases;
-     see `docs/release-channels.md`.
+   - Pre-release mode toggle (`changesets-pre-toggle.yml`) enables prerelease
+     tags (`next`, `beta`, `rc`) without blocking stable `main` releases;
+     see `docs/guides/release-channels.md`.
 
 ### File & Workflow Reference
 
-| Control              | Location                                  | Purpose                                           |
-| -------------------- | ----------------------------------------- | ------------------------------------------------- |
-| Provenance publish   | `.github/workflows/release.yml`           | Trusted build + attestation for published package |
-| SBOM (CycloneDX)     | `.github/workflows/release.yml`           | Component inventory & license/vuln correlation    |
-| Dependency review    | `.github/workflows/dependency-review.yml` | Blocks risky new deps in PRs                      |
-| OSV scanning         | `.github/workflows/security.yml`          | Scheduled & push vuln detection                   |
-| Harden-Runner        | All workflows (first step)                | Runtime/network anomaly detection                 |
-| Channel releases     | `.github/workflows/pre-mode.yml`          | Manual prerelease tagging & publish               |
-| Channel strategy doc | `docs/release-channels.md`                | Promotion, rollback, dist-tag policy              |
+| Control              | Location                                       | Purpose                                           |
+| -------------------- | ---------------------------------------------- | ------------------------------------------------- |
+| Main publish         | `.github/workflows/publish.yml`                | Consolidated workflow: stable + pre-release       |
+| SBOM (CycloneDX)     | `.github/workflows/release.yml`                | Component inventory & license/vuln correlation    |
+| Dependency review    | `.github/workflows/dependency-review.yml`      | Blocks risky new deps in PRs                      |
+| OSV scanning         | `.github/workflows/security.yml`               | Scheduled & push vuln detection                   |
+| Harden-Runner        | Security-critical workflows (first step)       | Runtime/network anomaly detection                 |
+| Pre-release toggle   | `.github/workflows/changesets-pre-toggle.yml`  | Enter/exit pre-release mode (next/beta/rc)        |
+| Channel strategy doc | `docs/guides/release-channels.md`              | Promotion, rollback, dist-tag policy              |
 
 ### Verification Procedures
 
@@ -82,7 +82,7 @@ hardening, and future provenance/signing enhancements.
 
 1. OSV scheduled scan flags new vulnerability.
 2. Check SBOM component version & license impact.
-3. Use `pnpm why <package>` to map dependency graph.
+3. Use `bun pm why <package>` to map dependency graph.
 4. Determine minimal upgrade path; prefer patch/minor upgrades with lowest
    depth.
 5. Create changeset marking `fix:` with summary of remediation.

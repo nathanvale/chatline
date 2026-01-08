@@ -57,7 +57,7 @@ Release**.
 
 2. **Comprehensive Dependency Scanning**
    - Scans entire project directory (`.`)
-   - Captures all dependencies from `pnpm-lock.yaml`
+   - Captures all dependencies from lockfile
    - Includes transitive dependencies
 
 3. **Dual Workflow Coverage**
@@ -65,7 +65,7 @@ Release**.
    - Ensures SBOM availability across different release mechanisms
 
 4. **Security Documentation**
-   - Excellent documentation in `docs/security-supply-chain.md`
+   - Excellent documentation in `docs/architecture/security-supply-chain.md`
    - Clear verification procedures documented
    - Integration with broader security strategy (OSV scanning, Harden-Runner)
 
@@ -279,7 +279,7 @@ The project has a robust security posture with:
 
 1. Add SBOM validation step
 2. Implement vulnerability scanning of SBOM at release time
-3. Document new quality gates in `security-supply-chain.md`
+3. Document new quality gates in `docs/architecture/security-supply-chain.md`
 
 ### Phase 3: Enhanced Security (Week 4+)
 

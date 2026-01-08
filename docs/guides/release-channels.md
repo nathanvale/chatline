@@ -187,4 +187,4 @@ pnpm add /chatline@1.2.0-canary-20250101123045
 
 ---
 
-For supply chain security layers see `docs/security-supply-chain.md`.
+For supply chain security layers see `docs/architecture/security-supply-chain.md`.

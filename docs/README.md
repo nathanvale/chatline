@@ -16,9 +16,6 @@ Technical specifications and system design.
 
 | Document | Description |
 |----------|-------------|
-| [imessage-pipeline-tech-spec.md](architecture/imessage-pipeline-tech-spec.md) | 4-stage pipeline architecture |
-| [imessage-pipeline-enhancements-spec.md](architecture/imessage-pipeline-enhancements-spec.md) | Enhancement specifications |
-| [imessage-pipeline-implementation-summary.md](architecture/imessage-pipeline-implementation-summary.md) | Implementation details |
 | [security-supply-chain.md](architecture/security-supply-chain.md) | Supply chain security |
 | [logging.md](architecture/logging.md) | Logging architecture |
 
