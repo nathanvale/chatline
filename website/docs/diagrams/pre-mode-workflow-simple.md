@@ -29,13 +29,13 @@
      ┌───────────────────────┐
      │  Need to publish?     │
      │  Run:                 │
-     │  channel-release.yml  │
+     │  publish.yml  │
      │  Intent: version      │
      └──────────┬────────────┘
                 │
                 ▼
      ┌────────────────────────┐
-     │  channel-release.yml   │
+     │  publish.yml   │
      │  Intent: publish       │
      └──────────┬─────────────┘
                 │
@@ -67,9 +67,9 @@
 | Task                 | Workflow            | Action/Intent              | Creates PR? |
 | -------------------- | ------------------- | -------------------------- | ----------- |
 | Start beta testing   | pre-mode.yml        | action=enter, channel=beta | YES         |
-| Update beta versions | channel-release.yml | intent=version             | NO          |
-| Publish to beta      | channel-release.yml | intent=publish             | NO          |
-| Quick test snapshot  | channel-release.yml | intent=snapshot            | NO          |
+| Update beta versions | publish.yml | intent=version             | NO          |
+| Publish to beta      | publish.yml | intent=publish             | NO          |
+| Quick test snapshot  | publish.yml | intent=snapshot            | NO          |
 | End beta testing     | pre-mode.yml        | action=exit                | YES         |
 
 ## Decision Tree: Which Workflow?
@@ -89,7 +89,7 @@
 └──────┬───────┘        └────────┬─────────┘
        │                         │
        ▼                         ▼
-  pre-mode.yml           channel-release.yml
+  pre-mode.yml           publish.yml
 ```
 
 ## Simple Rules
@@ -100,7 +100,7 @@
 - Ending a beta/rc/next cycle
 - You want a PR for review
 
-### Use channel-release.yml when:
+### Use publish.yml when:
 
 - Already in pre-mode
 - Need to bump versions
@@ -109,7 +109,7 @@
 
 ## Common Mistakes (Avoid These!)
 
-❌ **WRONG:** Using channel-release.yml to enter pre-mode ✅ **RIGHT:** Using
+❌ **WRONG:** Using publish.yml to enter pre-mode ✅ **RIGHT:** Using
 pre-mode.yml to enter pre-mode
 
 ❌ **WRONG:** Trying to version before entering pre-mode ✅ **RIGHT:** Enter
@@ -138,14 +138,14 @@ Step 2: MAKE CHANGES
 → Changesets created automatically
 
 Step 3: BUMP VERSIONS
-→ GitHub Actions → channel-release.yml
+→ GitHub Actions → publish.yml
 → Inputs:
   - channel: beta
   - intent: version
 → Result: Versions bumped (1.0.0-beta.0, 1.0.0-beta.1, etc.)
 
 Step 4: PUBLISH TO NPM
-→ GitHub Actions → channel-release.yml
+→ GitHub Actions → publish.yml
 → Inputs:
   - channel: beta
   - intent: publish
@@ -173,7 +173,7 @@ Step 7: STABLE RELEASE
 ### "I'm in pre-mode but can't publish"
 
 **Check:** Did you run `version` before `publish`? **Fix:** Run
-channel-release.yml with intent=version first
+publish.yml with intent=version first
 
 ### "I want to exit pre-mode but nothing happened"
 
@@ -185,7 +185,7 @@ the PR with label `release:pre-toggle`
 **Don't worry!** The bot creates them automatically from your PR title. Use
 conventional commits: `feat:`, `fix:`, `refactor!:`
 
-### "I ran channel-release.yml but I'm not in pre-mode"
+### "I ran publish.yml but I'm not in pre-mode"
 
 **Problem:** You tried to version/publish before entering pre-mode **Fix:** Run
 pre-mode.yml with action=enter first
@@ -202,7 +202,7 @@ pre-mode.yml with action=enter first
        ▼
 ┌─────────────┐
 │  PRE-MODE   │  Beta/RC/Next testing
-│   ACTIVE    │  Use channel-release.yml for version/publish
+│   ACTIVE    │  Use publish.yml for version/publish
 └──────┬──────┘
        │
        │ pre-mode.yml (exit) → PR → Merge

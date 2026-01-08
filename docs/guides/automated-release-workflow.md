@@ -1,5 +1,9 @@
 # Automated Release Workflow
 
+> **⚠️ QUICK START?** See [RELEASES.md](../RELEASES.md) for the ADHD-friendly playbook.
+>
+> This document is **comprehensive reference documentation** with troubleshooting, best practices, and detailed explanations.
+
 > **Status**: ✅ **FULLY CONFIGURED** - This project has a production-ready
 > automated release workflow with Changesets, conventional commits, and Git
 > hooks.

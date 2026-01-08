@@ -11,8 +11,8 @@ Use these composite actions instead of hand-rolled setup steps:
 - name: Standard CI Env
   uses: ./.github/actions/standard-ci-env
 
-- name: Setup pnpm toolchain
-  uses: ./.github/actions/setup-pnpm
+- name: Setup Bun toolchain
+  uses: ./.github/actions/setup-bun
   with:
     # For publish flows
     registry-url: 'https://registry.npmjs.org'
@@ -21,9 +21,8 @@ Use these composite actions instead of hand-rolled setup steps:
 Effects:
 
 - Exports `TZ=UTC` and `TF_BUILD=true`
-- Enables Corepack, pins pnpm via `packageManager`
-- Sets Node version from `.nvmrc`
-- Configures and caches pnpm store keyed by `.nvmrc` + `pnpm-lock.yaml`
+- Sets Bun version from `.bun-version` file
+- Configures and caches Bun global cache keyed by `bun.lock`
 
 ## Permissions (least privilege)
 

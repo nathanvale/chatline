@@ -298,7 +298,7 @@ repo-template/
 ├── .github/
 │   ├── workflows/
 │   │   ├── pr-quality.yml   # Lint, test, typecheck
-│   │   ├── changesets-manage-publish.yml
+│   │   ├── publish.yml
 │   │   ├── pre-mode.yml
 │   │   └── alpha-snapshot.yml
 │   └── scripts/

@@ -1304,8 +1304,7 @@ ALLOW_PUSH_PROTECTED=1 git push
 - **Linting**: ESLint with recommended rules
 - **Testing**: Vitest with 70%+ coverage threshold
 - **Commits**: Conventional commits (feat:, fix:, docs:, etc.)
-  - See [Automated Release Workflow](./docs/automated-release-workflow.md) for
-    commit format guide
+  - See [RELEASES.md](./RELEASES.md) for the quick playbook
 
 ### Release Process
 
@@ -1318,10 +1317,9 @@ This project uses **automated releases** with Changesets:
 
 📚 **Full documentation:**
 
-- **[Automated Release Workflow](./docs/automated-release-workflow.md)** - Main
-  release process
-- **[Pre-Release Guide](./docs/pre-release-guide.md)** - Canary, beta, and RC
-  releases
+- **[RELEASES.md](./RELEASES.md)** - ADHD-friendly release playbook (quick start)
+- **[Automated Release Workflow](./docs/automated-release-workflow.md)** - Comprehensive reference
+- **[Pre-Release Guide](./docs/pre-release-guide.md)** - Canary, beta, and RC releases
 
 ### Release Channels
 

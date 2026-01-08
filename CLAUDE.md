@@ -360,7 +360,7 @@ bun run pre:exit
 bun release:snapshot:canary
 ```
 
-See `docs/automated-release-workflow.md` for full details.
+See `RELEASES.md` for the quick playbook or `docs/automated-release-workflow.md` for comprehensive details.
 
 ---
 
@@ -493,7 +493,8 @@ const sorted = messages.sort((a, b) =>
 - `README.md` - Main user guide
 - `CI.md` - CI/CD comprehensive guide
 - `TESTING.md` - Testing strategy
-- `docs/automated-release-workflow.md` - Release process
+- `RELEASES.md` - ADHD-friendly release playbook (quick start)
+- `docs/automated-release-workflow.md` - Release process (comprehensive reference)
 - `docs/pre-release-guide.md` - Pre-release channels
 - `docs/cli-usage.md` - CLI command reference
 - `docs/imessage-pipeline-tech-spec.md` - Technical spec

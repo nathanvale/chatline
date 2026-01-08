@@ -175,7 +175,7 @@ env:
 ```
 
 **Common workflows to update**:
-- `changesets-manage-publish.yml`
+- `publish.yml`
 - `version-packages-auto-merge.yml`
 - `release.yml`
 - Any workflow that creates/updates PRs or triggers other workflows
@@ -197,7 +197,7 @@ Add a section to your CI documentation (e.g., `CI.md`, `CONTRIBUTING.md`):
 - GitHub Secret: `OP_SERVICE_ACCOUNT_TOKEN`
 
 **Workflows Using App**:
-- `changesets-manage-publish.yml` - Version PR creation/publishing
+- `publish.yml` - Version PR creation/publishing
 - `version-packages-auto-merge.yml` - Auto-merge enablement
 - (list other workflows)
 

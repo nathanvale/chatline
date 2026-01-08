@@ -37,7 +37,7 @@ prefer dedicated release branches to avoid blocking unrelated changes.
 
 ## Workflow Overview
 
-GitHub workflow: `.github/workflows/channel-release.yml` provides
+GitHub workflow: `.github/workflows/pre-mode.yml` provides
 `workflow_dispatch` with inputs:
 
 - `channel`: one of `next`, `beta`, `rc`.

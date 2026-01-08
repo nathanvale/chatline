@@ -48,7 +48,7 @@ That’s it. No tagging or manual publishes.
    - Ensures a changeset exists. If missing, it creates `.changeset/*.md` using
      the PR title to determine semver bump.
 2. On push to main:
-   - `Changesets Manage & Publish` opens/updates the **Version Packages** PR or
+   - `Publish` opens/updates the **Version Packages** PR or
      (when that PR merges) publishes to npm with `pnpm release` and creates the
      tag.
 3. Nightly at 02:00 UTC (only when pre-mode is active):

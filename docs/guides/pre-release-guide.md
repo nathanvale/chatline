@@ -1,8 +1,5 @@
 # Pre-Release Guide - Canary, Beta, and RC Releases
 
-> **Current Status**: Pre-release mode **ACTIVE** with `next` channel (canary
-> releases) at version `0.0.1`
-
 This guide explains how to publish pre-release versions of `chatline`
 for testing, early access, and staged rollouts.
 
@@ -77,35 +74,12 @@ PRE-RELEASE MODE (ON - next channel):
 
 ---
 
-## Current Setup
+## Configured Workflows
 
-### Status
-
-```json
-{
-  "changesets": [],
-  "initialVersions": {
-    "chatline": "0.0.1"
-  },
-  "mode": "pre",
-  "tag": "next"
-}
-```
-
-**What this means:**
-
-- ✅ Pre-release mode is **ACTIVE**
-- ✅ Channel: `next` (canary releases)
-- ✅ Base version: `0.0.1`
-- ✅ Next version will be: `0.0.1-next.0`
-
-### Configured Workflows
-
-| Workflow                        | Purpose                     | When It Runs                              |
-| ------------------------------- | --------------------------- | ----------------------------------------- |
-| `pre-mode.yml`                  | Enter/exit pre-release mode | Manual trigger only                       |
-| `alpha-snapshot.yml`            | Nightly canary snapshots    | Daily at 02:00 UTC (when pre-mode active) |
-| `changesets-manage-publish.yml` | Normal version/publish flow | On push to main                           |
+| Workflow         | Purpose                                      | When It Runs        |
+| ---------------- | -------------------------------------------- | ------------------- |
+| `pre-mode.yml`   | Enter/exit pre-release mode                  | Manual trigger only |
+| `publish.yml`    | Version/publish flow (auto, version, publish, snapshot) | On push to main or manual trigger |
 
 ---
 
@@ -297,39 +271,34 @@ npm install /chatline@0.0.1-next.0
 
 ---
 
-### Option 3: Automated Nightly (Hands-Off)
+### Option 3: Automated Snapshot (Hands-Off)
 
-**Use when:** You want automatic daily canary builds.
+**Use when:** You want manual snapshot builds via workflow dispatch.
 
 **Setup:**
 
-- ✅ **Already configured** - `alpha-snapshot.yml` workflow
-- ✅ Runs daily at **02:00 UTC**
-- ✅ Only runs when **pre-release mode is active**
-- ✅ Publishes with `@alpha` tag
+- ✅ **Already configured** - `publish.yml` workflow with `snapshot` intent
+- ✅ Triggered manually via GitHub Actions
+- ✅ Publishes with `@canary` tag
 
 **What it does:**
 
-1. Checks if `.changeset/pre.json` exists
-2. If pre-mode is active:
-   - Runs `changeset version --snapshot alpha`
-   - Creates version like: `0.0.1-alpha-20251116020000`
-   - Publishes to npm with `@alpha` tag
-3. If pre-mode is off:
-   - Skips publishing (prevents confusion)
+1. Triggered manually via `gh workflow run publish.yml -f intent=snapshot`
+2. Runs `changeset version --snapshot canary`
+3. Creates version like: `0.0.1-canary-20251116020000`
+4. Publishes to npm with `@canary` tag
 
 **Users install:**
 
 ```bash
-npm install /chatline@alpha
+npm install /chatline@canary
 ```
 
 **When to use:**
 
-- Continuous testing environments
-- Automated QA pipelines
-- Night owls who want fresh builds daily
-- "Living on the edge" early adopters
+- Quick testing builds
+- On-demand validation
+- CI/CD integration testing
 
 ---
 
@@ -464,14 +433,13 @@ pnpm publish  # @latest
 
 ### Channel Comparison
 
-| Channel    | Tag       | Stability   | Frequency           | Use Case                         |
-| ---------- | --------- | ----------- | ------------------- | -------------------------------- |
-| **canary** | `@canary` | Unstable    | On-demand snapshots | Quick testing, WIP shares        |
-| **next**   | `@next`   | Unstable    | Daily or as-needed  | Fast iteration, early adopters   |
-| **alpha**  | `@alpha`  | Unstable    | Nightly (02:00 UTC) | Automated QA, continuous testing |
-| **beta**   | `@beta`   | Semi-stable | Weekly sprints      | Feature-complete testing         |
-| **rc**     | `@rc`     | Stable      | Pre-release only    | Final validation before release  |
-| **latest** | `@latest` | Stable      | Production releases | End users                        |
+| Channel    | Tag       | Stability   | Frequency           | Use Case                        |
+| ---------- | --------- | ----------- | ------------------- | ------------------------------- |
+| **canary** | `@canary` | Unstable    | On-demand snapshots | Quick testing, WIP shares       |
+| **next**   | `@next`   | Unstable    | As-needed           | Fast iteration, early adopters  |
+| **beta**   | `@beta`   | Semi-stable | Weekly sprints      | Feature-complete testing        |
+| **rc**     | `@rc`     | Stable      | Pre-release only    | Final validation before release |
+| **latest** | `@latest` | Stable      | Production releases | End users                       |
 
 ### Recommended Strategy
 
@@ -490,7 +458,7 @@ Development → beta → rc → latest
 **For continuous delivery:**
 
 ```
-Development → next → alpha (nightly) → beta → latest
+Development → next → beta → latest
 ```
 
 **Current setup (recommended for initial releases):**
@@ -664,18 +632,10 @@ gh workflow run pre-mode.yml -f action=enter -f channel=next
 
 **Publishing options:**
 
-1. **Snapshot** (`pnpm release:snapshot:canary`) - Quick, throwaway builds
-2. **Versioned** (`pnpm changeset version && pnpm publish --tag next`) - Tracked
-   pre-releases
-3. **Automated** (nightly workflow) - Hands-off daily builds
-
-**Current setup:**
-
-- ✅ Pre-release mode active with `next` channel
-- ✅ Base version: `0.0.1`
-- ✅ Nightly snapshots configured
-- ✅ Ready for first canary release!
+1. **Snapshot** (`pnpm release:snapshot:canary`) - Quick, throwaway builds (only when NOT in pre-mode)
+2. **Versioned** (`pnpm changeset version && pnpm publish --tag next`) - Tracked pre-releases
+3. **Manual Snapshot** (`gh workflow run publish.yml -f intent=snapshot`) - On-demand builds via workflow
 
 ---
 
-**Last Updated:** 2025-11-16 **Status:** Active (next mode at 0.0.1)
+**Last Updated:** 2026-01-09

@@ -1,5 +1,7 @@
 # Pre-Mode Workflow Consolidation Plan
 
+> **Status:** ✅ **COMPLETED** - This document describes the consolidation work that has been completed. The workflows have been renamed: `channel-release.yml` is now `publish.yml`.
+
 ## 🎯 Goal
 
 Have ONE clear way to manage pre-release mode (beta, rc, next channels).

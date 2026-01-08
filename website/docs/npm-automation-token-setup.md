@@ -63,9 +63,9 @@ Format: `npm_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
 
 The token is used in these workflows:
 
-- `.github/workflows/changesets-manage-publish.yml`
+- `.github/workflows/publish.yml`
 - `.github/workflows/alpha-snapshot.yml`
-- `.github/workflows/channel-release.yml`
+- `.github/workflows/pre-mode.yml`
 
 Next time you merge a "Version Packages" PR, it will use this token to publish.
 

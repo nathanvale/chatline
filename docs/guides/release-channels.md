@@ -37,26 +37,33 @@ prefer dedicated release branches to avoid blocking unrelated changes.
 
 ## Workflow Overview
 
-GitHub workflow: `.github/workflows/channel-release.yml` provides
-`workflow_dispatch` with inputs:
+GitHub workflow: `.github/workflows/publish.yml` provides `workflow_dispatch`
+with inputs:
 
 - `channel`: one of `next`, `beta`, `rc`.
-- `intent`: `enter`, `version`, `publish`, `exit`, `snapshot`.
+- `intent`: `auto`, `version`, `publish`, `snapshot`.
+
+Pre-release mode (`enter`/`exit`) is managed via a separate workflow:
+`.github/workflows/changesets-pre-toggle.yml`.
 
 ### Typical Sequence (Next → Beta → RC → Latest)
 
 1. Create branch: `git checkout -b release/1.2-next`.
-2. Run channel workflow `enter` with channel=`next`.
-3. Iterate: add changesets, run `version` → `publish` as needed.
+2. Enter pre-release mode: Run `Changesets Pre-Mode Toggle` workflow with
+   `mode=enter` and `tag=next`.
+3. Iterate: add changesets, run `publish.yml` with `intent=version` →
+   `intent=publish` as needed.
 4. Promote to beta:
-   - Exit `next`: `intent=exit` (removes prerelease suffix internally after next
-     cycle?)
-   - Enter beta: run workflow with channel=`beta` intent=`enter`.
+   - Exit `next`: Run `Changesets Pre-Mode Toggle` with `mode=exit`.
+   - Enter beta: Run `Changesets Pre-Mode Toggle` with `mode=enter` and
+     `tag=beta`.
 5. Repeat version/publish until feature complete.
-6. Enter rc: channel=`rc` intent=`enter`.
-7. Final stabilization: small fixes + `version` + `publish` as required.
-8. Exit rc: `intent=exit` then merge branch into `main` and trigger normal
-   `Release` workflow (publishes to `latest`).
+6. Enter rc: Run `Changesets Pre-Mode Toggle` with `mode=enter` and `tag=rc`.
+7. Final stabilization: small fixes + `intent=version` + `intent=publish` as
+   required.
+8. Exit rc: Run `Changesets Pre-Mode Toggle` with `mode=exit`, then merge branch
+   into `main` and trigger normal publish via push to `main` (publishes to
+   `latest`).
 
 ### Canary Snapshots
 
@@ -68,8 +75,8 @@ GitHub workflow: `.github/workflows/channel-release.yml` provides
 > **Alternative:** When in pre-mode, use versioned pre-releases instead
 > (`changeset version` + `changeset publish`).
 
-Use `intent=snapshot` to invoke `release:snapshot:canary` script (only when NOT
-in pre-mode):
+Use `publish.yml` workflow with `intent=snapshot` to invoke
+`release:snapshot:canary` script (only when NOT in pre-mode):
 
 ```
 changeset version --snapshot canary
