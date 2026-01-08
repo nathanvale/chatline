@@ -8,7 +8,7 @@
 
 **Name:** @nathanvale/chatline
 **Type:** CLI Tool + Library Package
-**Version:** 0.0.1
+**Version:** 0.3.1
 **Tech Stack:** TypeScript, Node.js 24+, Bun, Biome, Vitest
 
 This is a sophisticated data pipeline that transforms iMessage conversations into searchable, enriched markdown timelines with AI-powered analysis.
@@ -306,18 +306,22 @@ Create with `bun cli init` or see `examples/imessage-config.yaml`
    - Package hygiene (publint, attw)
 
 2. **Publish** (`publish.yml`)
-   - Consolidated workflow (auto-publish, pre-releases, snapshots)
-   - Opens "chore: version packages" PR
+   - Consolidated workflow: stable + pre-release publishing
+   - Opens "chore: version packages" PR on push to main
    - Auto-merges after checks pass
-   - Publishes to npm with OIDC trusted publishing
+   - Publishes to npm with OIDC trusted publishing (no NPM_TOKEN needed)
+   - Supports intents: `auto` | `version` | `publish` | `snapshot`
 
-3. **Security Scanning**
+3. **Pre-Release Toggle** (`changesets-pre-toggle.yml`)
+   - Enter/exit pre-release mode (next, beta, rc channels)
+
+4. **Security Scanning**
    - CodeQL (JS/TS analysis)
    - OSV Scanner (dependency vulnerabilities)
    - Dependency Review (PR checks)
 
-4. **Automated Dependency Maintenance**
-   - Renovate (npm/pnpm, grouped, safe automerge)
+5. **Automated Dependency Maintenance**
+   - Renovate (npm deps, grouped, safe automerge)
    - Dependabot (GitHub Actions only)
 
 **Branch Protection:**
@@ -494,12 +498,12 @@ const sorted = messages.sort((a, b) =>
 - `CI.md` - CI/CD comprehensive guide
 - `TESTING.md` - Testing strategy
 - `RELEASES.md` - ADHD-friendly release playbook (quick start)
-- `docs/automated-release-workflow.md` - Release process (comprehensive reference)
-- `docs/pre-release-guide.md` - Pre-release channels
-- `docs/cli-usage.md` - CLI command reference
-- `docs/imessage-pipeline-tech-spec.md` - Technical spec
-- `docs/testing-best-practices.md` - Test patterns
-- `docs/bun-script-best-practices.md` - Bun usage rationale
+- `docs/guides/automated-release-workflow.md` - Release process (comprehensive reference)
+- `docs/guides/pre-release-guide.md` - Pre-release channels
+- `docs/guides/testing-best-practices.md` - Test patterns
+- `docs/guides/bun-script-best-practices.md` - Bun usage rationale
+- `docs/architecture/logging.md` - Logging architecture
+- `docs/architecture/security-supply-chain.md` - Supply chain security
 
 ---
 
@@ -528,4 +532,4 @@ const sorted = messages.sort((a, b) =>
 
 ---
 
-**Last Updated:** 2025-12-23 (Auto-generated via kit:prime and git-intelligence)
+**Last Updated:** 2026-01-09
