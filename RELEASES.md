@@ -30,7 +30,7 @@ Canary (quick experiment)
 Prerelease (next/beta/rc)
 1) Enter pre-mode for the channel: `bunx changeset pre enter beta` (or `next`/`rc`)
 2) Add changesets.
-3) Version bump prerelease: `bunx changeset version:pre` (or `bunx changeset version`)
+3) Version bump prerelease: `bun run version:pre` (or `bunx changeset version`)
 4) Publish to npm with channel tag: `bunx changeset publish --tag beta` (or `next`/`rc`)
 5) Stay in pre-mode until you need a canary or stable.
 
@@ -71,10 +71,10 @@ Suggested defaults
 
 | Workflow | Trusted Publisher | Notes |
 |----------|-------------------|-------|
-| `channel-release.yml` | ✅ Configured | Manual channel releases (next/beta/rc/canary) |
-| `changesets-manage-publish.yml` | ⏳ Add when needed | Auto-publish on main merge |
-| `release.yml` | ⏳ Add when needed | Manual stable releases |
+| `publish.yml` | ✅ Configured | Consolidated workflow: auto-publish, channel releases (next/beta/rc), snapshots |
 | `alpha-snapshot.yml` | ⏳ Add when needed | Daily alpha snapshots |
+
+> **Note:** `channel-release.yml` and `changesets-manage-publish.yml` were consolidated into `publish.yml` (npm OIDC only allows one trusted publisher per package).
 
 To add more workflows: npmjs.com → package Settings → Trusted Publisher → Add another connection.
 
@@ -90,7 +90,7 @@ To add more workflows: npmjs.com → package Settings → Trusted Publisher → 
    - Added GitHub Actions with:
      - **Owner:** `nathanvale`
      - **Repository:** `chatline`
-     - **Workflow filename:** `channel-release.yml`
+     - **Workflow filename:** `publish.yml`
      - **Environment:** (blank)
 
 3. **Delete NPM_TOKEN secret** (optional but recommended):

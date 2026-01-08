@@ -7,7 +7,7 @@ config:
 ---
 flowchart TD
     start(("Plan release intent"))
-    checks("`Run pre-publish checks:\n- bun run build\n- bun run test:ci\n- bun run quality-check:ci\n- bun run check:types\n- bun run check:publint\n- bunx changeset status`")
+    checks("`Run pre-publish checks:\n- bun run build\n- bun run test:ci\n- bun run quality-check:ci\n- bun run check:publint\n- bunx changeset status`")
     path{"`Which release path?`"}
 
     start --> checks --> path
@@ -21,7 +21,7 @@ flowchart TD
         canaryStart["Exit pre-mode\nbunx changeset pre exit"]
         canaryVersion["Snapshot version + publish\nbunx changeset version --snapshot canary\nbunx changeset publish --tag canary"]
         canaryOptional["Optional: re-enter pre-mode\nbunx changeset pre enter next/beta/rc"]
-        canaryWorkflow["Use channel-release.yml\nintent=snapshot (OIDC publish)"]
+        canaryWorkflow["Use publish.yml\nintent=snapshot (OIDC publish)"]
         canaryStart --> canaryVersion --> canaryWorkflow
         canaryVersion --> canaryOptional
     end
@@ -34,7 +34,7 @@ flowchart TD
         preVersion["Version with suffix\nbun run version:pre OR bunx changeset version"]
         preCommit["Commit + push\n(e.g., chore: version packages)"]
         prePublish["Publish with dist-tag\nbun run publish:pre OR bunx changeset publish --tag <channel>"]
-        preWorkflow["channel-release.yml\nintent=version/publish (manual)"]
+        preWorkflow["publish.yml\nintent=version (creates PR)\nintent=publish (publishes)"]
         preStart --> preChangeset --> preVersion --> preCommit --> prePublish --> preWorkflow
     end
     preWorkflow --> done
@@ -44,12 +44,9 @@ flowchart TD
         stableStart["Exit pre-mode\nbunx changeset pre exit"]
         stableChangeset["Ensure pending changesets merged"]
         stableVersion["Version packages\nbunx changeset version"]
-        stableAuto["Automation: changesets-manage-publish.yml\ncreates Version Packages PR + publish"]
-        stableManual["Manual fallback: release.yml\nquality-check + publish latest"]
+        stableAuto["publish.yml (intent=auto)\nauto on push to main\n(opens Version Packages PR + publishes)"]
         stablePublish["Publish to npm latest\nbunx changeset publish (or via workflows)"]
-        stableStart --> stableChangeset --> stableVersion --> stablePublish
-        stableVersion --> stableAuto --> stablePublish
-        stableVersion --> stableManual --> stablePublish
+        stableStart --> stableChangeset --> stableVersion --> stableAuto --> stablePublish
     end
     stablePublish --> done
 
