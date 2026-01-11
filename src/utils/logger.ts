@@ -96,6 +96,19 @@ function _format(entry: LogEntry): string {
 	return JSON.stringify(entry)
 }
 
+/**
+ * Write a structured log entry to all configured outputs.
+ *
+ * Outputs to:
+ * - stdout via Pino (JSON or pretty format based on LOG_FORMAT env)
+ * - JSONL file (logs/YYYY-MM-DD.jsonl) if LOG_TO_FILE=true
+ * - Custom sinks registered via registerSink()
+ *
+ * @param component - Component/module name (e.g., 'enrich:images')
+ * @param level - Log level: debug, info, warn, or error
+ * @param msg - Human-readable message
+ * @param context - Optional structured context (key-value pairs)
+ */
 export function log(
 	component: string,
 	level: LogLevel,
@@ -153,6 +166,15 @@ export type ComponentLogger = {
 	error: (msg: string, context?: Record<string, unknown>) => void
 }
 
+/**
+ * Create a component-scoped logger with pre-bound component name.
+ *
+ * Returns logger with debug/info/warn/error methods that automatically
+ * include the component name in all log entries.
+ *
+ * @param component - Component/module name to bind to all log calls
+ * @returns ComponentLogger with level-specific methods
+ */
 export function createLogger(component: string): ComponentLogger {
 	return {
 		debug: (msg, context) => log(component, 'debug', msg, context),
@@ -167,22 +189,61 @@ export function createLogger(component: string): ComponentLogger {
 // For now we expose a hook for external collectors.
 export type LogSink = (entry: LogEntry) => void
 let sinks: LogSink[] = []
+
+/**
+ * Register a custom sink to receive all log entries.
+ *
+ * Useful for:
+ * - Test assertions (spy on log calls)
+ * - External collectors (ship to Pinot, Kafka, etc.)
+ * - Custom filtering/routing
+ *
+ * @param sink - Function called for each log entry
+ */
 export function registerSink(sink: LogSink): void {
 	sinks.push(sink)
 }
+
+/**
+ * Clear all registered custom sinks.
+ * Typically used in test cleanup (afterEach/afterAll).
+ */
 export function clearSinks(): void {
 	sinks = []
 }
 
-// Correlation ID management
+/**
+ * Set the global correlation ID for all subsequent log entries.
+ *
+ * Used to track related operations across async boundaries.
+ * Consider using withCorrelationId() for scoped correlation IDs.
+ *
+ * @param id - Correlation ID or undefined to clear
+ */
 export function setCorrelationId(id: string | undefined): void {
 	currentCorrelationId = id
 }
 
+/**
+ * Get the current correlation ID from async context or global state.
+ *
+ * @returns Active correlation ID or undefined if none set
+ */
 export function getCorrelationId(): string | undefined {
 	return correlationStore.getStore() ?? currentCorrelationId
 }
 
+/**
+ * Run a function with a scoped correlation ID.
+ *
+ * The correlation ID will be included in all log entries within the
+ * function's execution, including async operations. Automatically restores
+ * previous correlation ID when function completes.
+ *
+ * @param id - Correlation ID to use for this scope
+ * @param fn - Function to execute (sync or async)
+ * @returns Promise resolving to function's return value
+ */
 export async function withCorrelationId<T>(
 	id: string,
 	fn: () => Promise<T> | T,
@@ -198,6 +259,16 @@ export async function withCorrelationId<T>(
 	})
 }
 
+/**
+ * Dynamically change the minimum log level at runtime.
+ *
+ * Overrides LOG_LEVEL environment variable. Useful for:
+ * - Increasing verbosity during debugging
+ * - Reducing log noise in production
+ * - Test isolation (set to 'error' to suppress output)
+ *
+ * @param level - New minimum log level (debug, info, warn, or error)
+ */
 // Dynamic log level control
 let dynamicLevel: LogLevel | undefined
 export function setLogLevel(level: LogLevel): void {

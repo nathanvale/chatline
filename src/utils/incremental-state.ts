@@ -14,7 +14,7 @@
  * - loadIncrementalState: Safe loading from disk with corruption handling
  * - saveIncrementalState: Atomic writes with temp file + rename
  * - detectNewMessages: O(n) GUID comparison using Set intersection
- * - updateStateWithEnrichedGuids: Add new enrichments and update metadata
+ * - updateStateWithEnrichedGuids: Pure function that returns new state with enrichments
  * - verifyConfigHash: Detect config changes between runs
  */
 
@@ -284,36 +284,43 @@ export function isStateOutdated(
 // ============================================================================
 
 /**
- * Update state with newly enriched GUIDs
+ * Update state with newly enriched GUIDs (pure function)
+ *
+ * Returns a new state object with enrichment updates. This follows the
+ * immutability pattern used throughout the codebase, ensuring predictable
+ * state transitions and preventing unintended side effects.
  *
  * Called after successful enrichment to:
  * - Add new enriched GUIDs (avoid duplicates)
  * - Update lastEnrichedAt timestamp
  * - Record enrichment statistics
  *
- * @param state - State to update (mutated in place)
+ * @param state - Current state (not modified)
  * @param newGuids - GUIDs that were just enriched
  * @param enrichmentStats - Optional enrichment stats
+ * @returns New IncrementalState with updated enrichment data
  */
 export function updateStateWithEnrichedGuids(
 	state: IncrementalState,
 	newGuids: string[],
 	enrichmentStats?: EnrichmentStats,
-): void {
+): IncrementalState {
 	// Add new GUIDs, avoiding duplicates
 	const existingSet = new Set(state.enrichedGuids)
+	const mergedGuids = [...state.enrichedGuids]
+
 	for (const guid of newGuids) {
 		if (!existingSet.has(guid)) {
-			state.enrichedGuids.push(guid)
+			mergedGuids.push(guid)
 		}
 	}
 
-	// Update timestamp
-	state.lastEnrichedAt = new Date().toISOString()
-
-	// Update stats if provided
-	if (enrichmentStats) {
-		state.enrichmentStats = enrichmentStats
+	// Return new state object with updates
+	return {
+		...state,
+		enrichedGuids: mergedGuids,
+		lastEnrichedAt: new Date().toISOString(),
+		enrichmentStats: enrichmentStats ?? state.enrichmentStats,
 	}
 }
 
