@@ -235,13 +235,8 @@ export async function analyzeImage(
 		const imageCacheDir = config.imageCacheDir || '/tmp/image-cache'
 
 		// AC01-AC03: Generate preview (cached)
-		let _previewPath: string | undefined
 		try {
-			_previewPath = await convertToJpgPreview(
-				message.media.path,
-				imageCacheDir,
-				90,
-			)
+			await convertToJpgPreview(message.media.path, imageCacheDir, 90)
 		} catch (err) {
 			logger.warn(
 				'Failed to create preview - continuing with Gemini analysis',

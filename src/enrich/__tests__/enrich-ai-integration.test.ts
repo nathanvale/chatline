@@ -354,7 +354,6 @@ describe('AC03: Checkpoint Resume - State Restoration', () => {
 	})
 
 	it('should verify no data loss on resume', () => {
-		const _totalItems = 500
 		checkpoint = {
 			lastProcessedIndex: 250,
 			totalProcessed: 251,
@@ -635,14 +634,7 @@ describe('AC05: Integration Tests with Real File Fixtures', () => {
 	})
 
 	it('should verify no external API calls during integration tests', () => {
-		let apiCallCount = 0
-
-		// Mock all API functions
-		const _apis = {
-			gemini: vi.fn(() => (apiCallCount++, Promise.resolve({}))),
-			firecrawl: vi.fn(() => (apiCallCount++, Promise.resolve({}))),
-			youtube: vi.fn(() => (apiCallCount++, Promise.resolve({}))),
-		}
+		const apiCallCount = 0
 
 		expect(apiCallCount).toBe(0) // No calls made yet
 	})

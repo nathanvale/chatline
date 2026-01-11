@@ -165,7 +165,6 @@ describe('EnrichmentProgressManager', () => {
 		it('should calculate ETA from operation durations', () => {
 			// Simulate operations with known duration
 			for (let i = 0; i < 5; i++) {
-				const _start = Date.now()
 				manager.startOperation('image', `photo${i}.jpg`)
 				manager.completeOperation('image')
 
@@ -191,9 +190,6 @@ describe('EnrichmentProgressManager', () => {
 		it('should update average with each operation', () => {
 			manager.startOperation('image', 'photo1.jpg')
 			manager.completeOperation('image')
-
-			const progress1 = manager.getProgress()
-			const _avg1 = progress1.averageDuration
 
 			// Do more operations
 			for (let i = 1; i < 5; i++) {
