@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { Message } from '#lib/schema/message'
-import { dedupAndMerge } from '../dedup-merge'
+import { dedupAndMerge, verifyNoDataLoss } from '../dedup-merge'
 
 /**
  * Test suite for CSV/DB deduplication and merge (NORMALIZE--T04)
@@ -905,6 +905,65 @@ describe('dedupAndMerge', () => {
 			for (let i = 0; i < result1.messages.length; i++) {
 				expect(result1.messages[i].guid).toBe(result2.messages[i].guid)
 			}
+		})
+	})
+
+	describe('verifyNoDataLoss', () => {
+		it('should pass when no deduplication occurs', () => {
+			// 2 CSV + 1 DB = 3 output (no duplicates)
+			expect(verifyNoDataLoss(2, 1, 3)).toBe(true)
+		})
+
+		it('should pass when exact deduplication occurs', () => {
+			// 2 CSV + 2 DB = 3 output (1 duplicate)
+			expect(verifyNoDataLoss(2, 2, 3)).toBe(true)
+		})
+
+		it('should pass when all messages are duplicates', () => {
+			// 2 CSV + 2 DB = 2 output (all duplicates)
+			expect(verifyNoDataLoss(2, 2, 2)).toBe(true)
+		})
+
+		it('should pass at lower bound (max of inputs)', () => {
+			// 5 CSV + 3 DB = 5 output (all DB messages were duplicates)
+			expect(verifyNoDataLoss(5, 3, 5)).toBe(true)
+		})
+
+		it('should pass at upper bound (sum of inputs)', () => {
+			// 3 CSV + 2 DB = 5 output (no duplicates)
+			expect(verifyNoDataLoss(3, 2, 5)).toBe(true)
+		})
+
+		it('should fail when output is less than max input (data loss)', () => {
+			// 5 CSV + 3 DB = 4 output (lost messages!)
+			expect(verifyNoDataLoss(5, 3, 4)).toBe(false)
+		})
+
+		it('should fail when output exceeds sum (phantom messages)', () => {
+			// 2 CSV + 3 DB = 6 output (impossible, phantom messages)
+			expect(verifyNoDataLoss(2, 3, 6)).toBe(false)
+		})
+
+		it('should handle empty inputs', () => {
+			expect(verifyNoDataLoss(0, 0, 0)).toBe(true)
+		})
+
+		it('should handle CSV-only input', () => {
+			expect(verifyNoDataLoss(5, 0, 5)).toBe(true)
+		})
+
+		it('should handle DB-only input', () => {
+			expect(verifyNoDataLoss(0, 5, 5)).toBe(true)
+		})
+
+		it('should fail for CSV-only with wrong count', () => {
+			expect(verifyNoDataLoss(5, 0, 4)).toBe(false)
+			expect(verifyNoDataLoss(5, 0, 6)).toBe(false)
+		})
+
+		it('should fail for DB-only with wrong count', () => {
+			expect(verifyNoDataLoss(0, 5, 4)).toBe(false)
+			expect(verifyNoDataLoss(0, 5, 6)).toBe(false)
 		})
 	})
 })

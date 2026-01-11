@@ -1,32 +1,12 @@
+import { createLogger } from '#utils/logger'
+import { inferMediaKind } from '#utils/media-utils'
 import type { ExportEnvelope, Message } from '../schema/message.js'
+import type { DBMessage, IngestOptions } from './types.js'
 
-export type DBMessage = {
-	guid: string
-	rowid?: number
-	text?: string | null
-	is_from_me: number
-	date: number // Apple epoch in seconds or nanoseconds
-	chat_id?: string
-	handle?: string
-	service?: string
-	subject?: string | null
-	attachments?: DBAttachment[]
-	[key: string]: unknown
-}
+const logger = createLogger('ingest:db')
 
-export type DBAttachment = {
-	id: string
-	filename: string
-	mime_type?: string
-	uti?: string | null
-	copied_path?: string
-	total_bytes?: number
-	[key: string]: unknown
-}
-
-export type IngestOptions = {
-	attachmentRoots: string[]
-}
+// Re-export types for external consumers
+export type { DBAttachment, DBMessage, IngestOptions } from './types.js'
 
 /**
  * Apple epoch reference: seconds since 2001-01-01 00:00:00 UTC
@@ -166,25 +146,13 @@ export function convertAppleEpochToISO8601(appleEpoch: number): string | null {
 		// Create Date and convert to ISO 8601
 		const date = new Date(unixSeconds * 1000)
 		return date.toISOString()
-	} catch {
+	} catch (error) {
+		logger.warn('Date conversion failed', {
+			appleEpoch,
+			error: error instanceof Error ? error.message : String(error),
+		})
 		return null
 	}
-}
-
-/**
- * Infer media kind from MIME type
- */
-export function inferMediaKind(
-	mimeType: string,
-): 'image' | 'audio' | 'video' | 'pdf' | 'unknown' {
-	if (!mimeType) return 'unknown'
-
-	if (mimeType.startsWith('image/')) return 'image'
-	if (mimeType.startsWith('audio/')) return 'audio'
-	if (mimeType.startsWith('video/')) return 'video'
-	if (mimeType.includes('pdf')) return 'pdf'
-
-	return 'unknown'
 }
 
 /**

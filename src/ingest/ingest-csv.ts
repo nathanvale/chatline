@@ -3,17 +3,16 @@ import * as os from 'node:os'
 import * as path from 'node:path'
 
 import { parse } from 'csv-parse/sync'
+import { createLogger } from '#utils/logger'
+import { inferMediaKind } from '#utils/media-utils'
 import type { ExportEnvelope, Message } from '../schema/message.js'
 import { MessageSchema } from '../schema/message.js'
+import type { CSVRow, IngestOptions } from './types.js'
 
-export type IngestOptions = {
-	attachmentRoots: string[]
-	messageDate?: string
-}
+const logger = createLogger('ingest:csv')
 
-export type CSVRow = {
-	[key: string]: string | undefined
-}
+// Re-export types for external consumers
+export type { CSVRow, IngestOptions } from './types.js'
 
 /**
  * Main entry point: Ingest CSV file and convert to unified Message schema
@@ -213,7 +212,11 @@ export function convertToISO8601(csvDate: string): string | null {
 
 		// Return ISO 8601 with Z suffix
 		return date.toISOString()
-	} catch {
+	} catch (error) {
+		logger.warn('Date parsing failed', {
+			input: csvDate,
+			error: error instanceof Error ? error.message : String(error),
+		})
 		return null
 	}
 }
@@ -275,8 +278,13 @@ export function resolveAttachmentPath(
 					if (files.length > 0 && files[0]) {
 						return path.join(root, files[0])
 					}
-				} catch {
-					// Directory doesn't exist or can't be read
+				} catch (error) {
+					logger.warn('Directory read failed during attachment search', {
+						root,
+						filename,
+						dateStr,
+						error: error instanceof Error ? error.message : String(error),
+					})
 				}
 			}
 		}
@@ -284,22 +292,6 @@ export function resolveAttachmentPath(
 
 	// Not found
 	return null
-}
-
-/**
- * Infer media kind from MIME type
- */
-export function inferMediaKind(
-	mimeType: string,
-): 'image' | 'audio' | 'video' | 'pdf' | 'unknown' {
-	if (!mimeType) return 'unknown'
-
-	if (mimeType.startsWith('image/')) return 'image'
-	if (mimeType.startsWith('audio/')) return 'audio'
-	if (mimeType.startsWith('video/')) return 'video'
-	if (mimeType.includes('pdf')) return 'pdf'
-
-	return 'unknown'
 }
 
 /**
@@ -317,7 +309,11 @@ export function formatDateForAttachmentSearch(isoDate: string): string {
 		const seconds = String(date.getUTCSeconds()).padStart(2, '0')
 
 		return `${year}-${month}-${day} ${hours} ${minutes} ${seconds}`
-	} catch {
+	} catch (error) {
+		logger.warn('Date formatting failed', {
+			isoDate,
+			error: error instanceof Error ? error.message : String(error),
+		})
 		return ''
 	}
 }
