@@ -56,3 +56,8 @@ website/.docusaurus/
 website/.cache-loader/
 website/build/
 website/node_modules/
+
+# Temporary project scaffolds (separate git repos)
+bun-typescript-starter/
+quick-test/
+test123/
