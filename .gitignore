@@ -40,6 +40,9 @@ report.*.json
 # OS
 .DS_Store
 
+# Claude Code local memory
+CLAUDE.local.md
+
 # Test artifacts
 test-results/
 .vitest/

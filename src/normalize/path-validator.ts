@@ -246,7 +246,6 @@ export function validateAndEnforcePaths(
 		}
 
 		// AC02: Add provenance metadata
-		const _source = inferSource(message, config.source)
 		media.provenance = createProvenance(message, config.source)
 
 		updatedMessage.media = media

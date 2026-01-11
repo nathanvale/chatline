@@ -1509,7 +1509,7 @@ Enrichment is idempotent via kind-based deduplication:
 
 ## License
 
-MIT © 2025
+MIT © 2025-2026
 
 See [LICENSE](LICENSE) file for full text.
 
