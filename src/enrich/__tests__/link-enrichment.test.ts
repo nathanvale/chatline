@@ -337,14 +337,6 @@ describe('Link Enrichment (ENRICH--T04)', () => {
 
 	describe('AC05: Never crash on link enrichment failure', () => {
 		it('should NOT crash when Firecrawl fails', async () => {
-			const _message: Message = {
-				guid: 'msg-1',
-				messageKind: 'text',
-				isFromMe: false,
-				date: '2025-10-17T10:00:00.000Z',
-				text: 'Check this link: https://example.com',
-			}
-
 			expect(enrichLinkContext).toBeDefined()
 			// Should catch error and return original message
 		})
@@ -636,14 +628,6 @@ describe('Link Enrichment (ENRICH--T04)', () => {
 
 	describe('Integration: Full link enrichment flow', () => {
 		it('should enrich text message with link', async () => {
-			const _message: Message = {
-				guid: 'msg-1',
-				messageKind: 'text',
-				isFromMe: false,
-				date: '2025-10-17T10:00:00.000Z',
-				text: `Check out this article: ${testUrls.generic}`,
-			}
-
 			expect(enrichLinkContext).toBeDefined()
 		})
 

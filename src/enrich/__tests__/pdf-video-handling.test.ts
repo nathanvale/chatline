@@ -382,19 +382,6 @@ Keep it to 2-3 sentences.`
 
 	describe('Integration: Full PDF/Video handling flow', () => {
 		it('should handle a complete PDF media message', async () => {
-			const _message: Message = {
-				guid: 'msg-1',
-				messageKind: 'media',
-				isFromMe: false,
-				date: '2025-10-17T10:00:00.000Z',
-				media: {
-					id: 'media-1',
-					filename: 'document.pdf',
-					path: testPdfPath,
-					mediaKind: 'pdf',
-				},
-			}
-
 			expect(analyzePdfOrVideo).toBeDefined()
 			// Should:
 			// 1. Check if media is PDF type
@@ -404,19 +391,6 @@ Keep it to 2-3 sentences.`
 		})
 
 		it('should handle a complete video media message', async () => {
-			const _message: Message = {
-				guid: 'msg-1',
-				messageKind: 'media',
-				isFromMe: false,
-				date: '2025-10-17T10:00:00.000Z',
-				media: {
-					id: 'media-1',
-					filename: 'video.mp4',
-					path: testVideoPath,
-					mediaKind: 'video',
-				},
-			}
-
 			expect(analyzePdfOrVideo).toBeDefined()
 			// Should:
 			// 1. Detect video mediaKind

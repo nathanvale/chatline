@@ -328,13 +328,13 @@ describe('IncrementalState', () => {
 			state.enrichedGuids = ['msg-1', 'msg-2']
 
 			const newGuids = ['msg-3', 'msg-4']
-			updateStateWithEnrichedGuids(state, newGuids)
+			const updated = updateStateWithEnrichedGuids(state, newGuids)
 
-			expect(state.enrichedGuids).toContain('msg-1')
-			expect(state.enrichedGuids).toContain('msg-2')
-			expect(state.enrichedGuids).toContain('msg-3')
-			expect(state.enrichedGuids).toContain('msg-4')
-			expect(state.enrichedGuids).toHaveLength(4)
+			expect(updated.enrichedGuids).toContain('msg-1')
+			expect(updated.enrichedGuids).toContain('msg-2')
+			expect(updated.enrichedGuids).toContain('msg-3')
+			expect(updated.enrichedGuids).toContain('msg-4')
+			expect(updated.enrichedGuids).toHaveLength(4)
 		})
 
 		it('should avoid duplicate GUIDs', () => {
@@ -342,25 +342,50 @@ describe('IncrementalState', () => {
 			state.enrichedGuids = ['msg-1', 'msg-2']
 
 			const newGuids = ['msg-2', 'msg-3']
-			updateStateWithEnrichedGuids(state, newGuids)
+			const updated = updateStateWithEnrichedGuids(state, newGuids)
 
-			expect(state.enrichedGuids).toHaveLength(3)
-			expect(state.enrichedGuids.filter((g) => g === 'msg-2')).toHaveLength(1)
+			expect(updated.enrichedGuids).toHaveLength(3)
+			expect(updated.enrichedGuids.filter((g) => g === 'msg-2')).toHaveLength(1)
 		})
 
 		it('should update enrichment stats', () => {
 			const state = createIncrementalState()
 
-			updateStateWithEnrichedGuids(state, ['msg-1', 'msg-2'], {
+			const updated = updateStateWithEnrichedGuids(state, ['msg-1', 'msg-2'], {
 				processedCount: 100,
 				failedCount: 2,
 				startTime: new Date().toISOString(),
 				endTime: new Date().toISOString(),
 			})
 
-			expect(state.enrichmentStats).toBeDefined()
-			expect(state.enrichmentStats?.processedCount).toBe(100)
-			expect(state.enrichmentStats?.failedCount).toBe(2)
+			expect(updated.enrichmentStats).toBeDefined()
+			expect(updated.enrichmentStats?.processedCount).toBe(100)
+			expect(updated.enrichmentStats?.failedCount).toBe(2)
+		})
+
+		it('should not mutate original state (immutability)', () => {
+			const state = createIncrementalState()
+			state.enrichedGuids = ['msg-1', 'msg-2']
+			const originalGuids = [...state.enrichedGuids]
+			const originalTimestamp = state.lastEnrichedAt
+			const originalStats = state.enrichmentStats
+
+			const newGuids = ['msg-3', 'msg-4']
+			const updated = updateStateWithEnrichedGuids(state, newGuids)
+
+			// Original state should not be modified
+			expect(state.enrichedGuids).toEqual(originalGuids)
+			expect(state.lastEnrichedAt).toBe(originalTimestamp)
+			expect(state.enrichmentStats).toBe(originalStats)
+
+			// Updated state should be a new object
+			expect(updated).not.toBe(state)
+			expect(updated.enrichedGuids).not.toBe(state.enrichedGuids)
+
+			// Updated state should have new data
+			expect(updated.enrichedGuids).toHaveLength(4)
+			expect(updated.enrichedGuids).toContain('msg-3')
+			expect(updated.enrichedGuids).toContain('msg-4')
 		})
 	})
 

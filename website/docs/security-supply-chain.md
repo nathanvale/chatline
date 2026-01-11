@@ -32,7 +32,7 @@ hardening, and future provenance/signing enhancements.
      baseline outbound calls and detect anomalies (supply chain compromise early
      warning).
 7. Release Channel Isolation
-   - Dedicated channel workflow (`channel-release.yml`) enables prerelease tags
+   - Dedicated channel workflow (`pre-mode.yml`) enables prerelease tags
      (`next`, `beta`, `rc`, `canary`) without blocking stable `main` releases;
      see `docs/release-channels.md`.
 
@@ -45,7 +45,7 @@ hardening, and future provenance/signing enhancements.
 | Dependency review    | `.github/workflows/dependency-review.yml` | Blocks risky new deps in PRs                      |
 | OSV scanning         | `.github/workflows/security.yml`          | Scheduled & push vuln detection                   |
 | Harden-Runner        | All workflows (first step)                | Runtime/network anomaly detection                 |
-| Channel releases     | `.github/workflows/channel-release.yml`   | Manual prerelease tagging & publish               |
+| Channel releases     | `.github/workflows/pre-mode.yml`          | Manual prerelease tagging & publish               |
 | Channel strategy doc | `docs/release-channels.md`                | Promotion, rollback, dist-tag policy              |
 
 ### Verification Procedures

@@ -11,6 +11,7 @@
 
 import { createHash } from 'node:crypto'
 import type { Message } from '#schema/message'
+import { normalizeIsoUtc } from '#utils/date-utils'
 import { renderAllEnrichments } from './embeds-blockquotes.js'
 import { getDatesSorted, groupMessagesByDateAndTimeOfDay } from './grouping.js'
 import { formatReplyThread } from './reply-rendering.js'
@@ -35,17 +36,10 @@ function formatTimeLocal(iso: string): string {
 export function renderMessages(messages: Message[]): Map<string, string> {
 	// Normalize all message dates to canonical UTC ISO (YYYY-MM-DDTHH:mm:ss.sssZ)
 	// This prevents environment-specific parsing differences for inputs lacking 'Z'.
-	const normalized: Message[] = messages.map((m) => {
-		const raw = m.date
-		// If the timestamp lacks any timezone designator (no 'Z' and no +/- offset),
-		// interpret it as UTC by appending 'Z' rather than relying on local timezone.
-		const hasZ = /Z$/.test(raw)
-		const hasOffset = /[+-]\d{2}:?\d{2}$/.test(raw)
-		const coerced = hasZ || hasOffset ? raw : `${raw.replace(/\s+$/, '')}Z`
-		// Now coerce to canonical ISO string in UTC
-		const iso = new Date(coerced).toISOString()
-		return { ...m, date: iso }
-	})
+	const normalized: Message[] = messages.map((m) => ({
+		...m,
+		date: normalizeIsoUtc(m.date),
+	}))
 
 	// Sort messages deterministically by timestamp, then by GUID
 	const sorted = sortMessagesByTimestamp(normalized)
@@ -290,10 +284,6 @@ export function validateMarkdownStructure(markdown: string): void {
 	if (!markdown || markdown.trim().length === 0) {
 		return
 	}
-
-	// Check for basic markdown structure
-	const _hasHeader = /^#\s+/m.test(markdown)
-	const _hasSections = /^##\s+/m.test(markdown)
 
 	if (
 		markdown.includes('Morning') ||

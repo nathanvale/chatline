@@ -40,6 +40,9 @@ report.*.json
 # OS
 .DS_Store
 
+# Claude Code local memory
+CLAUDE.local.md
+
 # Test artifacts
 test-results/
 .vitest/
@@ -53,3 +56,8 @@ website/.docusaurus/
 website/.cache-loader/
 website/build/
 website/node_modules/
+
+# Temporary project scaffolds (separate git repos)
+bun-typescript-starter/
+quick-test/
+test123/

@@ -44,7 +44,7 @@ type FormatStats = {
 /**
  * Logger for structured output
  */
-const _logger = createLogger('enrich:pdf-video')
+const logger = createLogger('enrich:pdf-video')
 
 /**
  * Structured prompt for Gemini PDF summarization
@@ -127,7 +127,7 @@ export async function analyzePdf(
 		])
 
 		const responseText = response.response.text()
-		_logger.debug(
+		logger.debug(
 			`Gemini PDF response received: ${responseText.substring(0, 150)}...`,
 		)
 
@@ -145,12 +145,12 @@ export async function analyzePdf(
 			pdfSummary: summary,
 		}
 
-		_logger.info(`PDF analysis complete: ${audioPath}`, {
+		logger.info(`PDF analysis complete: ${audioPath}`, {
 			kind: enrichment.kind,
 		})
 		return enrichment
 	} catch (error) {
-		_logger.error(`Gemini API error for PDF ${audioPath}`, { error })
+		logger.error(`Gemini API error for PDF ${audioPath}`, { error })
 		throw error
 	}
 }
@@ -183,14 +183,14 @@ export async function handleVideo(
 			},
 		}
 
-		_logger.info(`Video metadata extracted: ${videoPath}`, {
+		logger.info(`Video metadata extracted: ${videoPath}`, {
 			size: fileStats.size,
 			analyzed: false,
 		})
 
 		return enrichment
 	} catch (error) {
-		_logger.error(`Error extracting video metadata: ${videoPath}`, { error })
+		logger.error(`Error extracting video metadata: ${videoPath}`, { error })
 		throw error
 	}
 }
@@ -205,7 +205,7 @@ export async function analyzePdfOrVideo(
 ): Promise<Message> {
 	// Skip if not enabled
 	if (!config.enablePdfVideoAnalysis) {
-		_logger.debug('PDF/video analysis disabled in config')
+		logger.debug('PDF/video analysis disabled in config')
 		return message
 	}
 
@@ -219,7 +219,7 @@ export async function analyzePdfOrVideo(
 
 	// Skip if path is missing
 	if (!message.media.path) {
-		_logger.warn('Skipping media with missing path', { filename })
+		logger.warn('Skipping media with missing path', { filename })
 		return message
 	}
 
@@ -227,7 +227,7 @@ export async function analyzePdfOrVideo(
 	try {
 		await access(message.media.path)
 	} catch {
-		_logger.warn('Media file not found at path', { path: message.media.path })
+		logger.warn('Media file not found at path', { path: message.media.path })
 		return message
 	}
 
@@ -243,7 +243,7 @@ export async function analyzePdfOrVideo(
 				enrichment: [...(message.media.enrichment || []), enrichment],
 			}
 
-			_logger.info('PDF enriched', { filename, guid: message.guid })
+			logger.info('PDF enriched', { filename, guid: message.guid })
 
 			return {
 				...message,
@@ -251,7 +251,7 @@ export async function analyzePdfOrVideo(
 			}
 		} catch (error) {
 			// AC03: Fallback to filename when Gemini fails
-			_logger.warn('PDF summarization failed, using filename as fallback', {
+			logger.warn('PDF summarization failed, using filename as fallback', {
 				filename,
 				error: error instanceof Error ? error.message : String(error),
 			})
@@ -288,14 +288,14 @@ export async function analyzePdfOrVideo(
 				enrichment: [...(message.media.enrichment || []), enrichment],
 			}
 
-			_logger.info('Video metadata extracted', { filename, guid: message.guid })
+			logger.info('Video metadata extracted', { filename, guid: message.guid })
 
 			return {
 				...message,
 				media: updatedMedia,
 			}
 		} catch (error) {
-			_logger.error('Error handling video', {
+			logger.error('Error handling video', {
 				filename,
 				guid: message.guid,
 				error: error instanceof Error ? error.message : String(error),
@@ -310,7 +310,7 @@ export async function analyzePdfOrVideo(
 	const supported = isSupportedFormat(mediaKind || '', extension)
 
 	if (!supported && mediaKind) {
-		_logger.warn('Unsupported format', {
+		logger.warn('Unsupported format', {
 			filename,
 			mediaKind,
 			extension,
@@ -365,7 +365,7 @@ export async function analyzePdfsOrVideos(
 			// AC04: Track unsupported formats
 			formatStats.unsupported[ext] = (formatStats.unsupported[ext] || 0) + 1
 
-			_logger.error('Failed to analyze message', {
+			logger.error('Failed to analyze message', {
 				guid: message.guid,
 				filename,
 				error: err instanceof Error ? err.message : String(err),
@@ -382,7 +382,7 @@ export async function analyzePdfsOrVideos(
 		.join(', ')
 
 	if (Object.keys(formatStats.unsupported).length > 0) {
-		_logger.info(`Unsupported formats: ${unsupportedSummary}`, {
+		logger.info(`Unsupported formats: ${unsupportedSummary}`, {
 			totalUnsupported: Object.values(formatStats.unsupported).reduce(
 				(a, b) => a + b,
 				0,
@@ -390,7 +390,7 @@ export async function analyzePdfsOrVideos(
 		})
 	}
 
-	_logger.info('Batch PDF/video analysis complete', {
+	logger.info('Batch PDF/video analysis complete', {
 		successCount,
 		skipCount,
 		errorCount,

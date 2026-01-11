@@ -341,15 +341,32 @@ export function applyDbAuthoritiveness(
 
 /**
  * AC04: Verify count invariants to prevent data loss
+ *
+ * Validates the merge operation preserved all unique messages:
+ * - Lower bound: Must have at least as many messages as the larger input
+ * - Upper bound: Cannot have more messages than both inputs combined
+ * - This ensures: max(csv, db) <= output <= csv + db
+ *
+ * @param csvCount - Number of CSV messages
+ * @param dbCount - Number of DB messages
+ * @param outputCount - Number of output messages after merge
+ * @returns true if counts are valid, false if data loss detected
  */
 export function verifyNoDataLoss(
 	csvCount: number,
 	dbCount: number,
 	outputCount: number,
 ): boolean {
-	// TODO: Implement count verification
-	// Invariant: outputCount >= max(csvCount, dbCount) - dedup count
-	return outputCount >= Math.max(csvCount, dbCount)
+	// Lower bound: output must have at least as many as the larger input
+	// This prevents losing messages from either source
+	const lowerBound = Math.max(csvCount, dbCount)
+
+	// Upper bound: output cannot exceed sum of both inputs
+	// This prevents phantom messages from appearing
+	const upperBound = csvCount + dbCount
+
+	// Valid range: lowerBound <= outputCount <= upperBound
+	return outputCount >= lowerBound && outputCount <= upperBound
 }
 
 export type { Message }

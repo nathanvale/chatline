@@ -10,7 +10,6 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest'
-import type { Message } from '#schema/message'
 import {
 	computeConfigHash,
 	createCheckpoint,
@@ -76,24 +75,6 @@ describe('Checkpoint and Resume Logic (ENRICH--T06)', () => {
 
 	describe('AC02: Checkpoint structure with stats and failed items', () => {
 		it('should create checkpoint with all required fields', () => {
-			const _config = { checkpointInterval: 100 }
-			const _messages: Message[] = [
-				{
-					guid: 'msg-1',
-					messageKind: 'text',
-					isFromMe: true,
-					date: '2025-10-18T10:00:00.000Z',
-					text: 'Test message 1',
-				},
-				{
-					guid: 'msg-2',
-					messageKind: 'text',
-					isFromMe: true,
-					date: '2025-10-18T10:01:00.000Z',
-					text: 'Test message 2',
-				},
-			]
-
 			const checkpoint = createCheckpoint({
 				lastProcessedIndex: 99,
 				totalProcessed: 150,
@@ -359,19 +340,6 @@ describe('Checkpoint and Resume Logic (ENRICH--T06)', () => {
 		})
 
 		it('should track cumulative stats across multiple checkpoints', () => {
-			const _checkpoint1 = createCheckpoint({
-				lastProcessedIndex: 99,
-				totalProcessed: 100,
-				totalFailed: 2,
-				stats: {
-					processedCount: 100,
-					failedCount: 2,
-					enrichmentsByKind: { image_analysis: 80, transcription: 20 },
-				},
-				failedItems: [],
-				configHash: 'hash-1',
-			})
-
 			// Second checkpoint after resume
 			const checkpoint2 = createCheckpoint({
 				lastProcessedIndex: 199,

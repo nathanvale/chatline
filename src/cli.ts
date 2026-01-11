@@ -1450,8 +1450,8 @@ program
 	.option('-q, --quiet', 'suppress detailed error messages', false)
 	.action(async (options: ValidateOptions) => {
 		const { input, quiet } = options
-		const _verbose = program.opts().verbose
-		applyLogLevel(_verbose, program.opts().quiet)
+		const verbose = program.opts().verbose
+		applyLogLevel(verbose, program.opts().quiet)
 
 		try {
 			const fs = await import('node:fs')

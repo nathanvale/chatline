@@ -40,7 +40,6 @@ vi.mock('node:fs/promises', () => ({
 
 describe('Audio Transcription (ENRICH--T02)', () => {
 	const testTempDir = '/tmp/enrich-test'
-	const _testCacheDir = `${testTempDir}/audio-cache`
 	const testAudioPath = `${testTempDir}/test-audio.m4a`
 
 	beforeEach(() => {
@@ -304,19 +303,6 @@ Short Description: A brief summary of the audio content.`
 
 	describe('AC05: Handle long audio files (>10min) with streaming/chunking', () => {
 		it('should handle audio files under 10 minutes normally', async () => {
-			const _message: Message = {
-				guid: 'msg-1',
-				messageKind: 'media',
-				isFromMe: false,
-				date: '2025-10-17T10:00:00.000Z',
-				media: {
-					id: 'media-1',
-					filename: 'short-audio.m4a',
-					path: testAudioPath,
-					mediaKind: 'audio',
-				},
-			}
-
 			expect(analyzeAudio).toBeDefined()
 		})
 
@@ -428,19 +414,6 @@ Short Description: [1-2 sentences]`
 
 	describe('Integration: Full audio transcription flow', () => {
 		it('should transcribe a complete audio media message', async () => {
-			const _message: Message = {
-				guid: 'msg-1',
-				messageKind: 'media',
-				isFromMe: false,
-				date: '2025-10-17T10:00:00.000Z',
-				media: {
-					id: 'media-1',
-					filename: 'conversation.m4a',
-					path: testAudioPath,
-					mediaKind: 'audio',
-				},
-			}
-
 			expect(analyzeAudio).toBeDefined()
 			// Should:
 			// 1. Check if media is audio type

@@ -40,10 +40,6 @@ vi.mock('node:fs/promises', () => ({
 }))
 
 describe('Image Analysis (ENRICH--T01)', () => {
-	const testTempDir = '/tmp/enrich-test'
-	const testCacheDir = `${testTempDir}/image-cache`
-	const _testMediaPath = `${testTempDir}/test-image.jpg`
-
 	beforeEach(() => {
 		vi.clearAllMocks()
 		// Reset all mocks before each test
@@ -94,7 +90,6 @@ describe('Image Analysis (ENRICH--T01)', () => {
 	describe('AC03: Preview caching - generate once, skip if exists', () => {
 		it('should cache preview by filename and skip if exists', async () => {
 			const { access } = await import('node:fs/promises')
-			const _previewPath = path.join(testCacheDir, 'preview-test-image.jpg')
 
 			// First call should check if preview exists
 			// If it exists, should skip generation
@@ -296,19 +291,6 @@ shortDescription: Outdoor brunch photo`,
 
 	describe('Integration: Full image analysis flow', () => {
 		it('should analyze a complete media message and add enrichment', async () => {
-			const _message: Message = {
-				guid: 'msg-1',
-				messageKind: 'media',
-				isFromMe: false,
-				date: '2025-10-17T10:00:00.000Z',
-				media: {
-					id: 'media-1',
-					filename: 'photo.heic',
-					path: '/abs/path/photo.heic',
-					mediaKind: 'image',
-				},
-			}
-
 			// analyzeImage should:
 			// 1. Convert HEIC to JPG preview
 			// 2. Call Gemini with image
@@ -358,19 +340,6 @@ shortDescription: Outdoor brunch photo`,
 	describe('Error handling & resilience', () => {
 		it('should NOT crash pipeline on Gemini API error', async () => {
 			// analyzeImage should catch errors and return original message
-			const _message: Message = {
-				guid: 'msg-1',
-				messageKind: 'media',
-				isFromMe: false,
-				date: '2025-10-17T10:00:00.000Z',
-				media: {
-					id: 'media-1',
-					filename: 'photo.jpg',
-					path: '/abs/path/photo.jpg',
-					mediaKind: 'image',
-				},
-			}
-
 			// Even if analyzeImage throws, it should be caught internally
 			expect(analyzeImage).toBeDefined()
 		})

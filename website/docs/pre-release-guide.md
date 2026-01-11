@@ -101,11 +101,11 @@ PRE-RELEASE MODE (ON - next channel):
 
 ### Configured Workflows
 
-| Workflow                        | Purpose                     | When It Runs                              |
-| ------------------------------- | --------------------------- | ----------------------------------------- |
-| `pre-mode.yml`                  | Enter/exit pre-release mode | Manual trigger only                       |
-| `alpha-snapshot.yml`            | Nightly canary snapshots    | Daily at 02:00 UTC (when pre-mode active) |
-| `changesets-manage-publish.yml` | Normal version/publish flow | On push to main                           |
+| Workflow                | Purpose                     | When It Runs                              |
+| ----------------------- | --------------------------- | ----------------------------------------- |
+| `pre-mode.yml`          | Enter/exit pre-release mode | Manual trigger only                       |
+| `alpha-snapshot.yml`    | Nightly canary snapshots    | Daily at 02:00 UTC (when pre-mode active) |
+| `publish.yml`           | Normal version/publish flow | On push to main                           |
 
 ---
 
