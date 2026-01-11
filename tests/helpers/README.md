@@ -175,6 +175,56 @@ const loved = createTapbackFixture('loved', parentMsg.guid)
 const laughed = createTapbackFixture('laughed', parentMsg.guid)
 ```
 
+### ⚠️ Deterministic vs Random Fixtures
+
+**IMPORTANT:** `createMessageFixture()` and related functions generate **random GUIDs and timestamps by default**, which can cause **flaky snapshot tests**.
+
+#### When to Use Each Pattern
+
+| Pattern | Use Case | Example |
+|---------|----------|---------|
+| **Random (default)** | Property-based testing, isolated unit tests where exact values don't matter | `createMessageFixture({ text: 'Test' })` |
+| **Deterministic** | Snapshot tests, integration tests, tests verifying exact output | `createMessageFixture({ guid: 'test-123', date: '2025-01-15T10:00:00Z' })` |
+| **`createTestMessage()`** | Preferred for deterministic testing (defaults to fixed values) | `createTestMessage({ text: 'Test' })` |
+
+#### Examples
+
+```typescript
+// ❌ AVOID for snapshot tests (random GUID + timestamp)
+const msg = createMessageFixture({ text: 'Test message' })
+expect(msg).toMatchSnapshot() // Flaky!
+
+// ✅ GOOD for snapshot tests (explicit deterministic values)
+const msg = createMessageFixture({
+  guid: 'test-123',
+  date: '2025-01-15T10:00:00Z',
+  text: 'Test message'
+})
+expect(msg).toMatchSnapshot() // Stable!
+
+// ✅ BETTER for deterministic tests (use createTestMessage)
+import { createTestMessage } from './datasets/determinism'
+
+const msg = createTestMessage({ text: 'Test message' })
+expect(msg).toMatchSnapshot() // Stable! (defaults: guid-fixed, 2025-01-15T10:00:00Z)
+```
+
+#### Batch Deterministic Messages
+
+```typescript
+// ✅ Deterministic batch creation
+const messages = createMessagesFixture(5, (i) => ({
+  guid: `test-msg-${i}`,
+  date: `2025-01-15T10:${String(i).padStart(2, '0')}:00Z`,
+  text: `Message ${i}`
+}))
+
+// ✅ Or use createSmallDataset(), createMediumDataset(), etc.
+import { createSmallDataset } from './datasets/determinism'
+
+const messages = createSmallDataset() // Pre-configured deterministic dataset
+```
+
 ### File-Based Fixtures
 
 ```typescript

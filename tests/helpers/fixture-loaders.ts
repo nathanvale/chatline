@@ -214,20 +214,44 @@ export function loadJsonLinesFixture<T = unknown>(filename: string): T[] {
 /**
  * Creates a minimal valid Message for testing
  *
- * @param overrides - Properties to override
+ * **IMPORTANT:** This function is NOT deterministic by default (uses random GUID + timestamp).
+ * For snapshot tests or when deterministic output is required, pass an explicit `guid` parameter.
+ *
+ * **When to use:**
+ * - **Random (default):** Property-based testing, isolated unit tests where exact values don't matter
+ * - **Deterministic:** Snapshot tests, integration tests, tests that verify exact output
+ *
+ * **For deterministic testing, prefer `createTestMessage()` from `tests/helpers/datasets/determinism.ts`**
+ * which defaults to fixed values (`guid-fixed`, `2025-01-15T10:00:00Z`).
+ *
+ * @param overrides - Properties to override (including optional `guid` for determinism)
  * @returns Valid Message object
  *
  * @example
+ * // Non-deterministic (random GUID + current timestamp)
  * const msg = createMessageFixture({ text: 'Test message', isFromMe: true })
+ *
+ * @example
+ * // Deterministic (fixed GUID + date)
+ * const msg = createMessageFixture({
+ *   guid: 'test-123',
+ *   date: '2025-01-15T10:00:00Z',
+ *   text: 'Snapshot test message'
+ * })
+ *
+ * @example
+ * // Prefer createTestMessage() for deterministic tests
+ * import { createTestMessage } from './datasets/determinism'
+ * const msg = createTestMessage({ text: 'Deterministic message' })
  */
 export function createMessageFixture(
 	overrides: Partial<Message> = {},
 ): Message {
 	const defaults: Message = {
-		guid: `test-${Date.now()}-${Math.random()}`,
+		guid: overrides.guid ?? `test-${Date.now()}-${Math.random()}`,
 		messageKind: 'text',
 		isFromMe: false,
-		date: new Date().toISOString(),
+		date: overrides.date ?? new Date().toISOString(),
 		text: 'Test message content',
 		handle: 'Test User',
 		service: 'iMessage',
@@ -246,14 +270,26 @@ export function createMessageFixture(
 /**
  * Creates multiple message fixtures
  *
+ * **IMPORTANT:** Like `createMessageFixture()`, this generates random GUIDs by default.
+ * For deterministic output, pass explicit `guid` values via `overridesFn`.
+ *
  * @param count - Number of messages to create
  * @param overridesFn - Function to generate overrides for each message
  * @returns Array of Message objects
  *
  * @example
+ * // Non-deterministic (random GUIDs)
  * const messages = createMessagesFixture(5, (i) => ({
  *   text: `Message ${i}`,
  *   isFromMe: i % 2 === 0
+ * }))
+ *
+ * @example
+ * // Deterministic (fixed GUIDs)
+ * const messages = createMessagesFixture(5, (i) => ({
+ *   guid: `test-msg-${i}`,
+ *   date: `2025-01-15T10:${i}:00Z`,
+ *   text: `Message ${i}`
  * }))
  */
 export function createMessagesFixture(
@@ -269,13 +305,25 @@ export function createMessagesFixture(
 /**
  * Creates a message fixture with media attachment
  *
+ * **IMPORTANT:** This generates random media IDs by default (uses `Date.now()`).
+ * For deterministic output, pass explicit `media.id` in overrides.
+ *
  * @param mediaKind - Type of media (image, audio, video, pdf)
  * @param overrides - Properties to override
  * @returns Message with media
  *
  * @example
+ * // Non-deterministic (random media ID)
  * const imgMsg = createMediaMessageFixture('image', {
  *   media: { filename: 'photo.heic' }
+ * })
+ *
+ * @example
+ * // Deterministic (fixed media ID + GUID)
+ * const imgMsg = createMediaMessageFixture('image', {
+ *   guid: 'test-img-123',
+ *   date: '2025-01-15T10:00:00Z',
+ *   media: { id: 'media-123', filename: 'photo.heic' }
  * })
  */
 export function createMediaMessageFixture(
@@ -295,7 +343,7 @@ export function createMediaMessageFixture(
 	return createMessageFixture({
 		messageKind: 'media',
 		media: {
-			id: `media-${Date.now()}`,
+			id: overrides.media?.id ?? `media-${Date.now()}`,
 			filename,
 			path: `/test/path/${filename}`,
 			mediaKind,
